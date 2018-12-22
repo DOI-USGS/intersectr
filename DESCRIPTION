@@ -1,0 +1,15 @@
+Package: intersecter
+Type: Package
+Title: Spatio-temporal Intersections
+Version: 0.0.1
+Authors@R: person("David", "Blodgett", role = c("aut", "cre"), email = "dblodgett@usgs.gov")
+Depends:
+    R (>= 3.0)
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+Imports: sf, dplyr, magrittr
+Suggests: testthat, tibble
+License: CC0
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.0

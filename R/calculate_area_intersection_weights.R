@@ -39,11 +39,15 @@
 #' b_a <- calculate_area_intersection_weights(b, a)
 #'
 #' @export
-#' @importFrom sf st_intersection st_set_geometry st_area
+#' @importFrom sf st_intersection st_set_geometry st_area st_crs
 #' @importFrom dplyr mutate group_by right_join select ungroup
 #' @importFrom magrittr "%>%"
 
 calculate_area_intersection_weights <- function(x, y) {
+
+  if(st_crs(x) != st_crs(y)) {
+    x <- st_transform(x, st_crs(y))
+  }
 
   # Standard evaluation is for chumps.
   id_x <- names(x)[names(x) != attr(x, "sf_column")]

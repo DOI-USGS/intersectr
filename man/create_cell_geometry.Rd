@@ -4,8 +4,7 @@
 \alias{create_cell_geometry}
 \title{Create Cell Geometry}
 \usage{
-create_cell_geometry(x, y, in_prj, out_prj, geom = NULL,
-  buffer_dist = 0)
+create_cell_geometry(x, y, prj, geom = NULL, buffer_dist = 0)
 }
 \arguments{
 \item{x}{numeric center positions of x indices}
@@ -13,12 +12,21 @@ create_cell_geometry(x, y, in_prj, out_prj, geom = NULL,
 \item{y}{numeric center positions of y indices}
 
 \item{prj}{character proj4 string for x and y}
+
+\item{geom}{sf data.frame with geometry that cell geometry should cover}
+
+\item{buffer_dist}{a distance to buffer the cell geometry in units of geom projection}
 }
 \description{
 Creates cell geometry from vectors of x and y positions.
 }
+\details{
+Intersection is performed with cell centers then geometry is constructed.
+A buffer may be required to fully cover geometry with cells.
+}
 \examples{
 library(RNetCDF)
+library(sf)
 variable_name <- "precipitation_amount"
 nc <- open.nc(system.file("extdata/metdata.nc", package = "intersecter"))
 nc_file <- file.inq.nc(nc)
@@ -39,22 +47,20 @@ y_var <- "lat"
 grid_mapping <- att.get.nc(nc, var - 1, "grid_mapping")
 
 if(!is.null(grid_mapping)) {
-  in_prj <- ncdfgeom::get_prj(gm_atts)
+  prj <- ncdfgeom::get_prj(gm_atts)
 } else {
-  in_prj <- "+init=epsg:4326"
+  prj <- "+init=epsg:4326"
   warning("No grid mapping found. Assuming WGS84")
 }
 
 x <- var.get.nc(nc, x_var)
 y <- var.get.nc(nc, y_var)
 
-geom <- sf::read_sf(system.file("shape/nc.shp", package = "sf"))
+geom <- read_sf(system.file("shape/nc.shp", package = "sf"))
 
-out_prj <- "+init=epsg:5070"
-
-cell_geometry <- create_cell_geometry(x, y, in_prj, out_prj, geom, 1000)
+cell_geometry <- create_cell_geometry(x, y, prj, geom, 0)
 
 plot(cell_geometry$geometry, lwd = 0.25)
-plot(st_transform(geom$geometry, out_prj), add = TRUE)
+plot(st_transform(geom$geometry, prj), add = TRUE)
 
 }

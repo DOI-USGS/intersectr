@@ -5,13 +5,19 @@
 #' @param x numeric center positions of x indices
 #' @param y numeric center positions of y indices
 #' @param prj character proj4 string for x and y
+#' @param geom sf data.frame with geometry that cell geometry should cover
+#' @param buffer_dist a distance to buffer the cell geometry in units of geom projection
+#'
+#' @details Intersection is performed with cell centers then geometry is constructed.
+#' A buffer may be required to fully cover geometry with cells.
 #'
 #' @importFrom sf st_sf st_as_sf st_as_sfc st_bbox st_transform st_buffer st_geometry st_union
-#' st_voronoi st_cast st_intersection st_join st_contains
-#'
+#' st_voronoi st_cast st_intersection st_join st_contains st_convex_hull st_distance
+#' @importFrom dplyr filter
 #' @export
 #' @examples
 #' library(RNetCDF)
+#' library(sf)
 #' variable_name <- "precipitation_amount"
 #' nc <- open.nc(system.file("extdata/metdata.nc", package = "intersecter"))
 #' nc_file <- file.inq.nc(nc)
@@ -32,25 +38,23 @@
 #' grid_mapping <- att.get.nc(nc, var - 1, "grid_mapping")
 #'
 #' if(!is.null(grid_mapping)) {
-#'   in_prj <- ncdfgeom::get_prj(gm_atts)
+#'   prj <- ncdfgeom::get_prj(gm_atts)
 #' } else {
-#'   in_prj <- "+init=epsg:4326"
+#'   prj <- "+init=epsg:4326"
 #'   warning("No grid mapping found. Assuming WGS84")
 #' }
 #'
 #' x <- var.get.nc(nc, x_var)
 #' y <- var.get.nc(nc, y_var)
 #'
-#' geom <- sf::read_sf(system.file("shape/nc.shp", package = "sf"))
+#' geom <- read_sf(system.file("shape/nc.shp", package = "sf"))
 #'
-#' out_prj <- "+init=epsg:5070"
-#'
-#' cell_geometry <- create_cell_geometry(x, y, in_prj, out_prj, geom, 1000)
+#' cell_geometry <- create_cell_geometry(x, y, prj, geom, 0)
 #'
 #' plot(cell_geometry$geometry, lwd = 0.25)
-#' plot(st_transform(geom$geometry, out_prj), add = TRUE)
+#' plot(st_transform(geom$geometry, prj), add = TRUE)
 #'
-create_cell_geometry <- function(x, y, in_prj, out_prj, geom = NULL, buffer_dist = 0) {
+create_cell_geometry <- function(x, y, prj, geom = NULL, buffer_dist = 0) {
 
   # For 2d lat/lon
   # x <- matrix(rep(c(1:ncol(lon)), nrow(lon)),
@@ -66,50 +70,108 @@ create_cell_geometry <- function(x, y, in_prj, out_prj, geom = NULL, buffer_dist
   #                         lon = matrix(lon, ncol = 1),
   #                         lat = matrix(lat, ncol = 1))
 
+  # cell size
+  dif_dist_x <- diff(x)
+  dif_dist_y <- diff(y)
+
+  if(any(diff(dif_dist_x) > 1e-10) | any(diff(dif_dist_y) > 1e-10)) {
+    stop("only regular rasters supported")
+  } else {
+    dif_dist_x <- mean(dif_dist_x)
+    dif_dist_y <- mean(dif_dist_y)
+  }
+
+  sf_points <- construct_points(x, y, prj)
+
+  if(!is.null(geom)) {
+    # intersect in projection of geometry
+    sf_points_filter <- st_intersection(
+      st_transform(sf_points, st_crs(geom)),
+      geom %>%
+        st_bbox() %>%
+        st_as_sfc() %>%
+        st_buffer(buffer_dist))
+
+    # grab all the rows and cols needed.
+    sf_points <- filter(sf_points,
+                          x_ind >= min(sf_points_filter$x_ind) &
+                          x_ind <= max(sf_points_filter$x_ind) &
+                          y_ind >= min(sf_points_filter$y_ind) &
+                          y_ind <= max(sf_points_filter$y_ind))
+  }
+
+  x_size <- diff(range(sf_points$x_ind)) + 1
+  y_size <- diff(range(sf_points$y_ind)) + 1
+
+  # not needed using stars
+  # point_hull <- st_convex_hull(st_union(sf_points))
+#
+#
+#   c1 <- filter(sf_points, x_ind == min(x_ind) & y_ind == min(y_ind))
+#   c2 <- filter(sf_points, x_ind == min(x_ind) & y_ind == max(y_ind))
+#   c3 <- filter(sf_points, x_ind == max(x_ind) & y_ind == max(y_ind))
+#
+#   dist_x <- as.numeric(st_distance(c1, c3)) / x_size
+#   dist_y <- as.numeric(st_distance(c2, c3)) / y_size
+#
+#   point_hull <- st_buffer(point_hull, mean(dist_x, dist_y) / 2,
+#                           joinStyle = "MITRE", mitreLimit = 3)
+
+  x <- x[min(sf_points$x_ind):max(sf_points$x_ind)]
+  y <- y[min(sf_points$y_ind):max(sf_points$y_ind)]
+
+  sf_polygons <- get_ids(length(x), length(y))
+  dim(sf_polygons) <- c(x = length(y), y = length(x))
+
+  sf_polygons <- stars::st_as_stars(raster::raster(sf_polygons,
+                                                   xmn = min(x) - 0.5 * dif_dist_x,
+                                                   xmx = max(x) + 0.5 * dif_dist_x,
+                                                   ymn = min(y) + 0.5 * dif_dist_y,
+                                                   ymx = max(y) - 0.5 * dif_dist_y,
+                                                   crs = prj)) %>%
+    st_as_sf(as_points = FALSE)
+
+  names(sf_polygons)[1] <- "grid_ids"
+
+  # sf_polygons <- st_geometry(sf_points) %>%
+  #   st_union() %>%
+  #   st_voronoi() %>%
+  #   st_cast() %>%
+  #   st_buffer(0) %>%
+  #   st_intersection(point_hull) %>%
+  #   st_sf()
+
+  sf_polygons <- st_join(sf_polygons, sf_points, join = st_contains)
+
+  sf::st_agr(sf_polygons) <- "constant"
+
+  return(sf_polygons)
+}
+
+construct_points <- function(x, y, prj) {
   x_vals <- matrix(x, nrow = length(y), ncol = length(x),
                    byrow = T)
   y_vals <- matrix(y, nrow = length(y), ncol = length(x),
                    byrow = F)
-  # ids <- matrix(seq(1, length(x) * length(y)),
-  #               nrow = length(y), ncol = length(x),
-  #               byrow = T)
   x_ind <- matrix(rep(c(1:ncol(x_vals)), nrow(x_vals)),
                   nrow = nrow(x_vals), ncol = ncol(x_vals),
                   byrow = TRUE)
-
   y_ind <- matrix(rep(c(1:nrow(x_vals)), ncol(x_vals)),
                   nrow = nrow(x_vals), ncol = ncol(x_vals),
                   byrow = FALSE)
 
   sf_points <- st_as_sf(data.frame(x = matrix(x_vals, ncol = 1),
                                    y = matrix(y_vals, ncol = 1),
-                                   # grid_id = matrix(ids, ncol = 1),
                                    x_ind = matrix(x_ind, ncol = 1),
                                    y_ind = matrix(y_ind, ncol = 1)),
                         coords = c("x", "y"),
-                        crs = in_prj,
-                        agr = "constant") %>%
-    st_transform(out_prj)
-
-  if(!is.null(geom)) {
-    crop_box <- st_transform(geom, out_prj) %>%
-      st_bbox() %>%
-      st_as_sfc() %>%
-      st_buffer(buffer_dist)
-    sf_points <- st_intersection(sf_points, crop_box)
-  } else {
-    crop_box <- st_as_sfc(st_bbox(sf_points)) # should maybe buffer half a cell...
-  }
-
-  sf_polygons <- st_geometry(sf_points) %>%
-    st_union() %>%
-    st_voronoi() %>%
-    st_cast() %>%
-    st_buffer(0) %>%
-    st_intersection(crop_box) %>%
-    st_sf()
-
-  sf_polygons <- st_join(sf_polygons, sf_points, join = st_contains) %>%
-    mutate(grid_id = 1:nrow(sf_polygons)) # see other method for grid id above.
-
+                        crs = prj,
+                        agr = "constant")
 }
+
+get_ids <- function(x_size, y_size) {
+  matrix(seq(1, x_size * y_size),
+         nrow = y_size, ncol = x_size,
+         byrow = T)
+}
+

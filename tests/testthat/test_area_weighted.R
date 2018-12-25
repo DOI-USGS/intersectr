@@ -38,3 +38,47 @@ test_that("area_intersection", {
                                  ida = as.numeric(NA),
                                  w = as.numeric(NA))), info = "b4 is not covered")
 })
+
+context("1d lat/lon")
+
+test_that("1d lat/lon", {
+  variable_name <- "precipitation_amount"
+  nc_file <- system.file("extdata/metdata.nc", package = "intersecter")
+  nc <- RNetCDF::open.nc(nc_file)
+  x_var <- "lon"
+  y_var <- "lat"
+  t_var <- "day"
+
+  x <- RNetCDF::var.get.nc(nc, x_var)
+  y <- RNetCDF::var.get.nc(nc, y_var)
+
+  geom <- sf::read_sf(system.file("shape/nc.shp", package = "sf")) %>%
+    st_transform(5070)
+
+  geom <- geom[5, ]
+
+  in_prj <- "+init=epsg:4326"
+
+  cell_geometry <- suppressWarnings(create_cell_geometry(x, y, in_prj, geom, 1000))
+
+  expect(nrow(cell_geometry) == 286)
+  expect(all(c("grid_ids", "x_ind", "y_ind") %in% names(cell_geometry)))
+
+  data_source_cells <- st_sf(select(cell_geometry, grid_ids))
+  target_polygons <- st_sf(select(geom, CNTY_ID))
+
+  sf::st_agr(data_source_cells) <- "constant"
+  sf::st_agr(target_polygons) <- "constant"
+
+  area_weights <- calculate_area_intersection_weights(
+    data_source_cells,
+    target_polygons)
+
+  intersected <- execute_intersection(nc_file, variable_name, area_weights,
+                                      cell_geometry, x_var, y_var, t_var)
+
+  expect(all(names(intersected) %in% c("time_stamp", "1832")))
+  expect(nrow(intersected) == 5)
+
+})
+

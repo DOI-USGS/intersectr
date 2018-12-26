@@ -12,8 +12,9 @@
 #' @param x_var character variable with X axis data
 #' @param y_var character variable with Y axis data
 #' @param t_var character variable with T axis data
-#' @param start_date not implemented
-#' @param end_date not implemented
+#' @param start_datetime character or POSIX character format is
+#' \code{\link{strptime}} default e.g. "2010-10-10 10:10:10"
+#' @param end_datetime character or POSIX
 #' @importFrom dplyr right_join mutate summarise group_by ungroup
 #' @importFrom RNetCDF open.nc dim.inq.nc var.inq.nc att.get.nc var.get.nc utcal.nc
 #' @export
@@ -88,12 +89,14 @@
 #' plot(geom_data["poly_data"], breaks = breaks, add = TRUE)
 #'
 #' plot(grid_data$geometry, lwd = 0.1, add = TRUE)
-
-execute_intersection <- function(nc_file, variable_name,
+#'
+execute_intersection <- function(nc_file,
+                                 variable_name,
                                  intersection_weights,
                                  cell_geometry,
                                  x_var, y_var, t_var,
-                                 start_date = NULL, end_date = NULL) {
+                                 start_datetime = NULL,
+                                 end_datetime = NULL) {
 
   names(intersection_weights) <- c("grid_ids", "poly_id", "w")
 
@@ -109,31 +112,54 @@ execute_intersection <- function(nc_file, variable_name,
   if(x_var_info$ndims > 1 | y_var_info$ndims > 1 | t_var_info$ndims > 1)
     stop("only 1d coordinate variables supported")
 
-  t_dim_info <- dim.inq.nc(nc, t_var_info$dimids)
-
-  dimid_order <- match(nc_var_info$dimids,
-                       c(x_var_info$dimids,
-                         y_var_info$dimids,
-                         t_var_info$dimids))
+  time_steps <- utcal.nc(att.get.nc(nc, t_var_info$name, "units"),
+                         var.get.nc(nc, t_var_info$name), "c")
+  time_steps <- data.frame(time_stamp = time_steps)
 
   x_inds <- seq(min(cell_geometry$x_ind), max(cell_geometry$x_ind), 1)
   y_inds <- seq(min(cell_geometry$y_ind), max(cell_geometry$y_ind), 1)
 
   ids <- get_ids(length(x_inds), length(y_inds))
 
-  # t_inds <- which(t_vals >= start_date & t_vals <= end_date)
+  if(is.null(start_datetime) & is.null(end_datetime)) {
 
-  if(is.null(start_date) & is.null(end_date)) {
-    out_nrows <- t_dim_info$length
-    out_ncols <- length(unique(intersection_weights[,2][[1]]))
+    out_nrows <- nrow(time_steps)
+
+    t_inds <- seq_len(out_nrows)
+
+  } else {
+
+    if(is.null(start_datetime)) start_datetime <- time_steps[1]
+    if(is.character(start_datetime)) start_datetime <- strptime(start_datetime,
+                                                                format = "%Y-%m-%d %H:%M:%S")
+    if(is.character(end_datetime)) end_datetime <- strptime(end_datetime,
+                                                            format = "%Y-%m-%d %H:%M:%S")
+
+    t_inds <- time_steps$time_stamp >= start_datetime &
+      time_steps$time_stamp <= end_datetime
+
+    time_steps <- filter(time_steps, t_inds)
+
+    t_inds <- which(t_inds)
+
+    out_nrows <- length(t_inds)
+  }
+    out_ncols <- length(unique(intersection_weights[ ,2][[1]]))
 
     out <- matrix(nrow = out_nrows, ncol = out_ncols)
+
+    dimid_order <- match(nc_var_info$dimids,
+                         c(x_var_info$dimids,
+                           y_var_info$dimids,
+                           t_var_info$dimids))
 
     for(i in 1:out_nrows) {
       try_backoff({
         i_data <- var.get.nc(nc, variable_name,
-                             start = c(min(x_inds), min(y_inds), i)[dimid_order],
-                             count = c(length(x_inds), length(y_inds), 1)[dimid_order])
+                             start = c(min(x_inds),
+                                       min(y_inds), i)[dimid_order],
+                             count = c(length(x_inds),
+                                       length(y_inds), 1)[dimid_order])
 
         i_data <- data.frame(d = matrix(t(i_data), # note t() here!!!
                                         ncol = 1,
@@ -143,21 +169,14 @@ execute_intersection <- function(nc_file, variable_name,
         i_data <- right_join(i_data,
                              intersection_weights,
                              by = c("grid_ids")) %>%
-          mutate(d = d * w) %>%
           group_by(poly_id) %>%
-          summarise(d = sum(d, na.rm = T)/sum(w, na.rm = T)) %>%
+          summarise(d = sum((d * w), na.rm = T) /
+                      sum(w, na.rm = T)) %>%
           ungroup()
 
         out[i, ] <- i_data$d
       })
     }
-  } else {
-    stop("date filtering not supported yet")
-  }
-  time_units <- att.get.nc(nc, t_var_info$name, "units")
-  time_vals <- var.get.nc(nc, t_var_info$name)
-  time_steps <- utcal.nc(time_units, time_vals, "c")
-  time_steps <- data.frame(time_stamp = time_steps)
 
   out <- data.frame(out)
 

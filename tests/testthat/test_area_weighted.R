@@ -80,5 +80,11 @@ test_that("1d lat/lon", {
   expect(all(names(intersected) %in% c("time_stamp", "1832")))
   expect(nrow(intersected) == 5)
 
+  intersected <- execute_intersection(nc_file, variable_name, area_weights,
+                                      cell_geometry, x_var, y_var, t_var,
+                                      start_datetime = "2018-09-13 00:00:00",
+                                      end_datetime = "2018-09-14 00:00:00")
+
+  expect(nrow(intersected) == 1)
 })
 

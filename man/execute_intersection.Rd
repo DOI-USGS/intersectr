@@ -5,8 +5,8 @@
 \title{Execute Intersection}
 \usage{
 execute_intersection(nc_file, variable_name, intersection_weights,
-  cell_geometry, x_var, y_var, t_var, start_date = NULL,
-  end_date = NULL)
+  cell_geometry, x_var, y_var, t_var, start_datetime = NULL,
+  end_datetime = NULL)
 }
 \arguments{
 \item{nc_file}{character path or OPeNDAP URL to NetCDF source}
@@ -25,9 +25,10 @@ execute_intersection(nc_file, variable_name, intersection_weights,
 
 \item{t_var}{character variable with T axis data}
 
-\item{start_date}{not implemented}
+\item{start_datetime}{character or POSIX character format is
+\code{\link{strptime}} default e.g. "2010-10-10 10:10:10"}
 
-\item{end_date}{not implemented}
+\item{end_datetime}{character or POSIX}
 }
 \description{
 Traverses many time steps of data applying
@@ -104,4 +105,5 @@ plot(grid_data["grid_data"], border = NA, breaks = breaks, add = TRUE)
 plot(geom_data["poly_data"], breaks = breaks, add = TRUE)
 
 plot(grid_data$geometry, lwd = 0.1, add = TRUE)
+
 }

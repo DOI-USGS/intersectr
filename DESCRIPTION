@@ -1,14 +1,16 @@
 Package: intersectr
 Type: Package
-Title: Spatio-temporal Intersections
+Title: Spatiotemporal Intersections
 Version: 0.0.1
 Authors@R: person("David", "Blodgett", role = c("aut", "cre"), email = "dblodgett@usgs.gov")
 Depends:
     R (>= 3.0)
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
+URL: https://github.com/dblodgett-usgs/intersectr
+BugReports: https://github.com/dblodgett-usgs.intersectr/issues
 Imports: sf, stars, raster, dplyr, RNetCDF, ncmeta
-Remotes: hypertidy/ncmeta
+Remotes: hypertidy/ncmeta 
 Suggests: testthat, tibble, ncdfgeom
 License: CC0
 Encoding: UTF-8

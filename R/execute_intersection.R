@@ -7,7 +7,7 @@
 #' @param variable_name character name of variable in NetCDF source to access
 #' @param intersection_weights data.frame as output by
 #' \code{\link{calculate_area_intersection_weights}}
-#' @param cell_geometry sf data.frame with x_ind and y_ind collumns as output by
+#' @param cell_geometry sf data.frame with x_ind and y_ind columns as output by
 #' \code{\link{create_cell_geometry}}
 #' @param x_var character variable with X axis data
 #' @param y_var character variable with Y axis data

@@ -1,6 +1,6 @@
 # intersectr
 
-`intersectr` is an indevelopment package for intersecting spatial attribute data. The primary emphasis is on gridded time-series data such as meteorological forcings that need to be intersected with a spatial modeling mesh or set of spatial modeling units.
+`intersectr` is an in development package for intersecting spatial attribute data. The primary emphasis is on gridded time-series data such as meteorological forcings that need to be intersected with a spatial modeling mesh or set of spatial modeling units.
 
 ### Installation:
 

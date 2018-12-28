@@ -5,8 +5,9 @@ Version: 0.0.1
 Authors@R: person("David", "Blodgett", role = c("aut", "cre"), email = "dblodgett@usgs.gov")
 Depends:
     R (>= 3.0)
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Description: Package for intersecting spatiotemporal attribute data. The primary 
+    emphasis is on gridded time-series data such as meteorological forcings that 
+    need to be intersected with a spatial modeling mesh or set of spatial modeling units.
 URL: https://github.com/dblodgett-usgs/intersectr
 BugReports: https://github.com/dblodgett-usgs.intersectr/issues
 Imports: sf, stars, raster, dplyr, RNetCDF, ncmeta

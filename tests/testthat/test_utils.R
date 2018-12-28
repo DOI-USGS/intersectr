@@ -7,24 +7,29 @@ test_that("get_var_by_att", {
 
   expect(length(find_var_by_att(nc, "units")) == 4)
 
-  expect(length(find_var_by_att(nc, "units", "degrees", strict = FALSE)) == 2)
+  expect(length(find_var_by_att(
+    nc, "units", "degrees", strict = FALSE)) == 2)
 
-  expect(length(find_var_by_att(nc, "units", "degrees", strict = TRUE)) == 0)
+  expect(length(find_var_by_att(
+    nc, "units", "degrees", strict = TRUE)) == 0)
 
-  expect(length(find_var_by_att(nc, "units", "degrees_east", strict = TRUE)) == 1)
+  expect(length(find_var_by_att(
+    nc, "units", "degrees_east", strict = TRUE)) == 1)
 
   nc <- RNetCDF::open.nc(nc)
 
   expect(find_var_by_att(nc, "coordinates") == "precipitation_amount")
 
-  expect(find_var_by_att(ncmeta::nc_atts(nc), "coordinates") == "precipitation_amount")
+  expect(find_var_by_att(ncmeta::nc_atts(nc),
+                         "coordinates") == "precipitation_amount")
 })
 
 test_that("get_grid_mapping", {
 
   nc <- system.file("extdata/metdata.nc", package = "intersectr")
   expect_warning(gm <- get_grid_mapping(nc),
-                 "No variables with a grid mapping found. Defaulting to WGS84 Lon/Lat")
+                 paste("No variables with a grid mapping found.\n",
+                       "Defaulting to WGS84 Lon/Lat"))
   expect_equal(gm, list(grid_mapping_name = "latitude_longitude",
                         semi_major_axis = 6378137,
                         inverse_flattening = 298.257223563,

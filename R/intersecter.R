@@ -30,9 +30,9 @@ x_ind <- y_ind <- d <- poly_id <- NULL
 #' @noRd
 try_backoff <- function(expr, silent=FALSE, max_attempts=10, verbose=FALSE) {
   for (attempt_i in seq_len(max_attempts)) {
-    results <- try(expr=expr, silent=silent)
+    results <- try(expr = expr, silent = silent)
     if (class(results) == "try-error") {
-      backoff <- runif(n=1, min=0, max=2^attempt_i - 1)
+      backoff <- runif (n = 1, min = 0, max = 2 ^ attempt_i - 1)
       if (verbose) {
         message("Backing off for ", backoff, " seconds.")
       }

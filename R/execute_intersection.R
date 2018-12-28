@@ -103,13 +103,13 @@ execute_intersection <- function(nc_file,
   nc <- open.nc(nc_file)
   nc_var_info <- var.inq.nc(nc, variable_name)
 
-  if(nc_var_info$ndims != 3) stop("only 3d variables are supported")
+  if (nc_var_info$ndims != 3) stop("only 3d variables are supported")
 
   x_var_info <- var.inq.nc(nc, x_var)
   y_var_info <- var.inq.nc(nc, y_var)
   t_var_info <- var.inq.nc(nc, t_var)
 
-  if(x_var_info$ndims > 1 | y_var_info$ndims > 1 | t_var_info$ndims > 1)
+  if (x_var_info$ndims > 1 | y_var_info$ndims > 1 | t_var_info$ndims > 1)
     stop("only 1d coordinate variables supported")
 
   time_steps <- utcal.nc(att.get.nc(nc, t_var_info$name, "units"),
@@ -121,7 +121,7 @@ execute_intersection <- function(nc_file,
 
   ids <- get_ids(length(x_inds), length(y_inds))
 
-  if(is.null(start_datetime) & is.null(end_datetime)) {
+  if (is.null(start_datetime) & is.null(end_datetime)) {
 
     out_nrows <- nrow(time_steps)
 
@@ -129,11 +129,15 @@ execute_intersection <- function(nc_file,
 
   } else {
 
-    if(is.null(start_datetime)) start_datetime <- time_steps[1]
-    if(is.character(start_datetime)) start_datetime <- strptime(start_datetime,
-                                                                format = "%Y-%m-%d %H:%M:%S")
-    if(is.character(end_datetime)) end_datetime <- strptime(end_datetime,
-                                                            format = "%Y-%m-%d %H:%M:%S")
+    if (is.null(start_datetime)) start_datetime <- time_steps[1]
+    if (is.character(start_datetime)) {
+      start_datetime <- strptime(start_datetime,
+                                 format = "%Y-%m-%d %H:%M:%S")
+    }
+    if (is.character(end_datetime)) {
+      end_datetime <- strptime(end_datetime,
+                               format = "%Y-%m-%d %H:%M:%S")
+    }
 
     t_inds <- time_steps$time_stamp >= start_datetime &
       time_steps$time_stamp <= end_datetime
@@ -144,7 +148,7 @@ execute_intersection <- function(nc_file,
 
     out_nrows <- length(t_inds)
   }
-    out_ncols <- length(unique(intersection_weights[ ,2][[1]]))
+    out_ncols <- length(unique(intersection_weights[, 2][[1]]))
 
     out <- matrix(nrow = out_nrows, ncol = out_ncols)
 
@@ -153,7 +157,7 @@ execute_intersection <- function(nc_file,
                            y_var_info$dimids,
                            t_var_info$dimids))
 
-    for(i in 1:out_nrows) {
+    for (i in 1:out_nrows) {
       try_backoff({
         i_data <- var.get.nc(nc, variable_name,
                              start = c(min(x_inds),
@@ -171,7 +175,7 @@ execute_intersection <- function(nc_file,
                              by = c("grid_ids"))
         i_data <- group_by(i_data, poly_id)
         i_data <- summarise(i_data,
-                            d = (sum((d * w), na.rm = T) /
+                            d = (sum( (d * w), na.rm = T) /
                                    sum(w, na.rm = T)))
           i_data <- ungroup(i_data)
 

@@ -29,23 +29,23 @@
 find_var_by_att <- function(x, attribute, value = ".*", strict = TRUE) {
 
   open_nc <- FALSE
-  if(is.character(x)) {
+  if (is.character(x)) {
     x <- open.nc(x)
     open_nc <- TRUE
   }
 
-  if(inherits(x, "NetCDF")) {
+  if (inherits(x, "NetCDF")) {
     atts <- nc_atts(x)
-  } else if(inherits(x, "data.frame")) {
+  } else if (inherits(x, "data.frame")) {
     atts <- x
   }
 
-  if(strict) value<-paste0("^",value,"$")
+  if (strict) value <- paste0("^", value, "$")
 
   atts <- atts[atts$name == attribute, ]
   atts <- atts[grepl(value, atts$value), ]
 
-  if(open_nc) close.nc(x)
+  if (open_nc) close.nc(x)
 
   return(atts$variable)
 }
@@ -66,24 +66,25 @@ find_var_by_att <- function(x, attribute, value = ".*", strict = TRUE) {
 get_grid_mapping <- function(x) {
 
   open_nc <- FALSE
-  if(is.character(x)) {
+  if (is.character(x)) {
     x <- open.nc(x)
     open_nc <- TRUE
   }
 
-  if(inherits(x, "NetCDF")) {
+  if (inherits(x, "NetCDF")) {
     atts <- nc_atts(x)
-  } else if(inherits(x, "data.frame")) {
+  } else if (inherits(x, "data.frame")) {
     atts <- x
   }
 
-  if(open_nc) close.nc(x)
+  if (open_nc) close.nc(x)
 
   gm_att <- "grid_mapping"
   grid_mapping_vars <- find_var_by_att(atts, gm_att)
 
-  if(length(grid_mapping_vars) == 0) {
-    warning("No variables with a grid mapping found. Defaulting to WGS84 Lon/Lat")
+  if (length(grid_mapping_vars) == 0) {
+    warning(paste("No variables with a grid mapping found.\n",
+                  "Defaulting to WGS84 Lon/Lat"))
     return(list(grid_mapping_name = "latitude_longitude",
                 semi_major_axis = 6378137,
                 inverse_flattening = 298.257223563,
@@ -92,7 +93,7 @@ get_grid_mapping <- function(x) {
 
   grid_mapping_var <- unique(atts$variable[atts$name == "grid_mapping_name"])
 
-  if(length(grid_mapping_var) > 1) {
+  if (length(grid_mapping_var) > 1) {
     stop("Found more than one grid mapping variable. Only one is supported.")
   }
 

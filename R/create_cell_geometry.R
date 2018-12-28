@@ -37,7 +37,7 @@
 #'
 #' grid_mapping <- att.get.nc(nc, var - 1, "grid_mapping")
 #'
-#' if(!is.null(grid_mapping)) {
+#' if (!is.null(grid_mapping)) {
 #'   prj <- ncdfgeom::get_prj(gm_atts)
 #' } else {
 #'   prj <- "+init=epsg:4326"
@@ -74,7 +74,7 @@ create_cell_geometry <- function(x, y, prj, geom = NULL, buffer_dist = 0) {
   dif_dist_x <- diff(x)
   dif_dist_y <- diff(y)
 
-  if(any(diff(dif_dist_x) > 1e-10) | any(diff(dif_dist_y) > 1e-10)) {
+  if (any(diff(dif_dist_x) > 1e-10) | any(diff(dif_dist_y) > 1e-10)) {
     stop("only regular rasters supported")
   } else {
     dif_dist_x <- mean(dif_dist_x)
@@ -83,7 +83,7 @@ create_cell_geometry <- function(x, y, prj, geom = NULL, buffer_dist = 0) {
 
   sf_points <- construct_points(x, y, prj)
 
-  if(!is.null(geom)) {
+  if (!is.null(geom)) {
     # intersect in projection of geometry
     sf_points_filter <- st_intersection(
       st_transform(sf_points, st_crs(geom)),
@@ -96,23 +96,6 @@ create_cell_geometry <- function(x, y, prj, geom = NULL, buffer_dist = 0) {
                           y_ind >= min(sf_points_filter$y_ind) &
                           y_ind <= max(sf_points_filter$y_ind))
   }
-
-  x_size <- diff(range(sf_points$x_ind)) + 1
-  y_size <- diff(range(sf_points$y_ind)) + 1
-
-  # not needed using stars
-  # point_hull <- st_convex_hull(st_union(sf_points))
-#
-#
-#   c1 <- filter(sf_points, x_ind == min(x_ind) & y_ind == min(y_ind))
-#   c2 <- filter(sf_points, x_ind == min(x_ind) & y_ind == max(y_ind))
-#   c3 <- filter(sf_points, x_ind == max(x_ind) & y_ind == max(y_ind))
-#
-#   dist_x <- as.numeric(st_distance(c1, c3)) / x_size
-#   dist_y <- as.numeric(st_distance(c2, c3)) / y_size
-#
-#   point_hull <- st_buffer(point_hull, mean(dist_x, dist_y) / 2,
-#                           joinStyle = "MITRE", mitreLimit = 3)
 
   x <- x[min(sf_points$x_ind):max(sf_points$x_ind)]
   y <- y[min(sf_points$y_ind):max(sf_points$y_ind)]
@@ -164,4 +147,3 @@ get_ids <- function(x_size, y_size) {
          nrow = y_size, ncol = x_size,
          byrow = T)
 }
-

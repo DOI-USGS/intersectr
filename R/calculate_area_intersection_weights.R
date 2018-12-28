@@ -44,7 +44,7 @@
 
 calculate_area_intersection_weights <- function(x, y) {
 
-  if(st_crs(x) != st_crs(y)) {
+  if (st_crs(x) != st_crs(y)) {
     x <- st_transform(x, st_crs(y))
   }
 
@@ -52,7 +52,7 @@ calculate_area_intersection_weights <- function(x, y) {
   id_x <- names(x)[names(x) != attr(x, "sf_column")]
   id_y <- names(y)[names(y) != attr(y, "sf_column")]
 
-  if(length(id_x) != 1 | length(id_y) != 1)
+  if (length(id_x) != 1 | length(id_y) != 1)
     stop("x and y must have one and only one non-geometry column")
 
   names(x)[names(x) == id_x] <- "varx"
@@ -72,7 +72,7 @@ calculate_area_intersection_weights <- function(x, y) {
   int <- right_join(int, x_area, by = "varx")
 
   # Join total x area and calculate percent for each sum of intersecting y.
-  int <- mutate(int, w = part_area/x_area)
+  int <- mutate(int, w = part_area / x_area)
   int <- select(int, varx, vary, w)
   int <- ungroup(int)
 

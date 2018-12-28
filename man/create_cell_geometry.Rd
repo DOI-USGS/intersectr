@@ -46,7 +46,7 @@ y_var <- "lat"
 
 grid_mapping <- att.get.nc(nc, var - 1, "grid_mapping")
 
-if(!is.null(grid_mapping)) {
+if (!is.null(grid_mapping)) {
   prj <- ncdfgeom::get_prj(gm_atts)
 } else {
   prj <- "+init=epsg:4326"

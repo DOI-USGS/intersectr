@@ -28,7 +28,7 @@
 #' y_var <- "lat"
 #' t_var <- "day"
 #'
-#' nc_file <- system.file("extdata/metdata.nc", package = "intersecter")
+#' nc_file <- system.file("extdata/metdata.nc", package = "intersectr")
 #' nc <- RNetCDF::open.nc(nc_file)
 #'
 #' x <- RNetCDF::var.get.nc(nc, x_var)
@@ -59,7 +59,7 @@
 #' x_inds <- seq(min(cell_geometry$x_ind), max(cell_geometry$x_ind), 1)
 #' y_inds <- seq(min(cell_geometry$y_ind), max(cell_geometry$y_ind), 1)
 #'
-#' ids <- intersecter:::get_ids(length(x_inds), length(y_inds))
+#' ids <- intersectr:::get_ids(length(x_inds), length(y_inds))
 #'
 #' grid_data <- RNetCDF::var.get.nc(nc, variable_name,
 #'                                  start = c(min(x_inds), min(y_inds), 5),
@@ -168,11 +168,12 @@ execute_intersection <- function(nc_file,
 
         i_data <- right_join(i_data,
                              intersection_weights,
-                             by = c("grid_ids")) %>%
-          group_by(poly_id) %>%
-          summarise(d = sum((d * w), na.rm = T) /
-                      sum(w, na.rm = T)) %>%
-          ungroup()
+                             by = c("grid_ids"))
+        i_data <- group_by(i_data, poly_id)
+        i_data <- summarise(i_data,
+                            d = (sum((d * w), na.rm = T) /
+                                   sum(w, na.rm = T)))
+          i_data <- ungroup(i_data)
 
         out[i, ] <- i_data$d
       })

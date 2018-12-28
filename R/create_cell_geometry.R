@@ -19,7 +19,7 @@
 #' library(RNetCDF)
 #' library(sf)
 #' variable_name <- "precipitation_amount"
-#' nc <- open.nc(system.file("extdata/metdata.nc", package = "intersecter"))
+#' nc <- open.nc(system.file("extdata/metdata.nc", package = "intersectr"))
 #' nc_file <- file.inq.nc(nc)
 #' nc_dim <- lapply(seq(0, nc_file$ndims-1), function(d) dim.inq.nc(nc, d))
 #' nc_var <- lapply(seq(0, nc_file$nvars-1), function(v) var.inq.nc(nc, v))
@@ -87,10 +87,7 @@ create_cell_geometry <- function(x, y, prj, geom = NULL, buffer_dist = 0) {
     # intersect in projection of geometry
     sf_points_filter <- st_intersection(
       st_transform(sf_points, st_crs(geom)),
-      geom %>%
-        st_bbox() %>%
-        st_as_sfc() %>%
-        st_buffer(buffer_dist))
+      st_buffer(st_as_sfc(st_bbox(geom)), buffer_dist))
 
     # grab all the rows and cols needed.
     sf_points <- filter(sf_points,
@@ -123,23 +120,16 @@ create_cell_geometry <- function(x, y, prj, geom = NULL, buffer_dist = 0) {
   sf_polygons <- get_ids(length(x), length(y))
   dim(sf_polygons) <- c(x = length(y), y = length(x))
 
-  sf_polygons <- stars::st_as_stars(raster::raster(sf_polygons,
-                                                   xmn = min(x) - 0.5 * dif_dist_x,
-                                                   xmx = max(x) + 0.5 * dif_dist_x,
-                                                   ymn = min(y) + 0.5 * dif_dist_y,
-                                                   ymx = max(y) - 0.5 * dif_dist_y,
-                                                   crs = prj)) %>%
-    st_as_sf(as_points = FALSE)
+  sf_polygons <- st_as_sf(
+    stars::st_as_stars(raster::raster(sf_polygons,
+                                      xmn = min(x) - 0.5 * dif_dist_x,
+                                      xmx = max(x) + 0.5 * dif_dist_x,
+                                      ymn = min(y) + 0.5 * dif_dist_y,
+                                      ymx = max(y) - 0.5 * dif_dist_y,
+                                      crs = prj)),
+    as_points = FALSE)
 
   names(sf_polygons)[1] <- "grid_ids"
-
-  # sf_polygons <- st_geometry(sf_points) %>%
-  #   st_union() %>%
-  #   st_voronoi() %>%
-  #   st_cast() %>%
-  #   st_buffer(0) %>%
-  #   st_intersection(point_hull) %>%
-  #   st_sf()
 
   sf_polygons <- st_join(sf_polygons, sf_points, join = st_contains)
 

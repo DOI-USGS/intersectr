@@ -28,7 +28,7 @@ A buffer may be required to fully cover geometry with cells.
 library(RNetCDF)
 library(sf)
 variable_name <- "precipitation_amount"
-nc <- open.nc(system.file("extdata/metdata.nc", package = "intersecter"))
+nc <- open.nc(system.file("extdata/metdata.nc", package = "intersectr"))
 nc_file <- file.inq.nc(nc)
 nc_dim <- lapply(seq(0, nc_file$ndims-1), function(d) dim.inq.nc(nc, d))
 nc_var <- lapply(seq(0, nc_file$nvars-1), function(v) var.inq.nc(nc, v))

@@ -44,7 +44,7 @@ x_var <- "lon"
 y_var <- "lat"
 t_var <- "day"
 
-nc_file <- system.file("extdata/metdata.nc", package = "intersecter")
+nc_file <- system.file("extdata/metdata.nc", package = "intersectr")
 nc <- RNetCDF::open.nc(nc_file)
 
 x <- RNetCDF::var.get.nc(nc, x_var)
@@ -75,7 +75,7 @@ intersected <- execute_intersection(nc_file, variable_name, area_weights,
 x_inds <- seq(min(cell_geometry$x_ind), max(cell_geometry$x_ind), 1)
 y_inds <- seq(min(cell_geometry$y_ind), max(cell_geometry$y_ind), 1)
 
-ids <- intersecter:::get_ids(length(x_inds), length(y_inds))
+ids <- intersectr:::get_ids(length(x_inds), length(y_inds))
 
 grid_data <- RNetCDF::var.get.nc(nc, variable_name,
                                  start = c(min(x_inds), min(y_inds), 5),

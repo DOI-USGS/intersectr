@@ -41,7 +41,6 @@
 #' @export
 #' @importFrom sf st_intersection st_set_geometry st_area st_crs
 #' @importFrom dplyr mutate group_by right_join select ungroup
-#' @importFrom magrittr "%>%"
 
 calculate_area_intersection_weights <- function(x, y) {
 
@@ -60,24 +59,24 @@ calculate_area_intersection_weights <- function(x, y) {
   names(y)[names(y) == id_y] <- "vary"
 
   # Get all parts and calculate their individual area
-  intersection <- st_intersection(x, y) %>%
-    mutate(part_area = as.numeric(st_area(.))) %>%
-    group_by(varx) %>% # Allow sum parts over each x.
-    st_set_geometry(NULL)
+  int <- st_intersection(x, y)
+  int <- mutate(int,
+                          part_area = as.numeric(st_area(int)))
+  int <- group_by(int, varx) # Allow sum parts over each x.
+  int <- st_set_geometry(int, NULL)
 
   # Get the area of x.
-  x_area <- mutate(x, x_area = as.numeric(st_area(x))) %>%
-    st_set_geometry(NULL)
+  x_area <- st_set_geometry(mutate(x, x_area = as.numeric(st_area(x))), NULL)
 
   # Join the intersecting area with the all the parts.
-  intersection <- right_join(intersection, x_area, by = "varx")
+  int <- right_join(int, x_area, by = "varx")
 
   # Join total x area and calculate percent for each sum of intersecting y.
-  intersection <- mutate(intersection, w = part_area/x_area) %>%
-    select(varx, vary, w) %>%
-    ungroup()
+  int <- mutate(int, w = part_area/x_area)
+  int <- select(int, varx, vary, w)
+  int <- ungroup(int)
 
-  out <- stats::setNames(intersection, c(id_x, id_y, "w"))
+  out <- stats::setNames(int, c(id_x, id_y, "w"))
 
   return(out)
 }

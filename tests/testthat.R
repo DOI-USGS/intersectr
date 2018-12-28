@@ -1,5 +1,5 @@
 library("testthat")
-library("intersecter")
+library("intersectr")
 library(sf)
 library(dplyr)
-test_check("intersecter")
+test_check("intersectr")

@@ -14,6 +14,7 @@
 #' @importFrom sf st_sf st_as_sf st_as_sfc st_bbox st_transform st_buffer st_geometry st_union
 #' st_voronoi st_cast st_intersection st_join st_contains st_convex_hull st_distance
 #' @importFrom dplyr filter
+#' @importFrom stars st_as_stars st_dimensions
 #' @export
 #' @examples
 #' library(RNetCDF)
@@ -103,14 +104,23 @@ create_cell_geometry <- function(x, y, prj, geom = NULL, buffer_dist = 0) {
   sf_polygons <- get_ids(length(x), length(y))
   dim(sf_polygons) <- c(x = length(y), y = length(x))
 
-  sf_polygons <- st_as_sf(
-    stars::st_as_stars(raster::raster(sf_polygons,
-                                      xmn = min(x) - 0.5 * dif_dist_x,
-                                      xmx = max(x) + 0.5 * dif_dist_x,
-                                      ymn = min(y) + 0.5 * dif_dist_y,
-                                      ymx = max(y) - 0.5 * dif_dist_y,
-                                      crs = prj)),
-    as_points = FALSE)
+  sf_polygons <- st_as_stars(list(sf_polygons = sf_polygons),
+                         dimensions = st_dimensions(x = as.numeric(y),
+                                                    y = as.numeric(x),
+                                                    .raster = c("x", "y")))
+
+  sf_polygons <- st_as_sf(sf_polygons, as_points = FALSE)
+
+  sf::st_crs(sf_polygons) <- st_crs(prj)
+
+  # sf_polygons <- st_as_sf(
+  #   stars::st_as_stars(raster::raster(sf_polygons,
+  #                                     xmn = min(x) - 0.5 * dif_dist_x,
+  #                                     xmx = max(x) + 0.5 * dif_dist_x,
+  #                                     ymn = min(y) + 0.5 * dif_dist_y,
+  #                                     ymx = max(y) - 0.5 * dif_dist_y,
+  #                                     crs = prj)),
+  #   as_points = FALSE)
 
   names(sf_polygons)[1] <- "grid_ids"
 
@@ -143,7 +153,7 @@ construct_points <- function(x, y, prj) {
 }
 
 get_ids <- function(x_size, y_size) {
-  matrix(seq(1, x_size * y_size),
+  matrix(as.numeric(seq(1, x_size * y_size)),
          nrow = y_size, ncol = x_size,
          byrow = T)
 }

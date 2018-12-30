@@ -2,8 +2,8 @@
 #'
 #' @description Creates cell geometry from vectors of x and y positions.
 #'
-#' @param x numeric center positions of x indices
-#' @param y numeric center positions of y indices
+#' @param col_coords numeric center positions of x indices
+#' @param row_coords numeric center positions of y indices
 #' @param prj character proj4 string for x and y
 #' @param geom sf data.frame with geometry that cell geometry should cover
 #' @param buffer_dist a distance to buffer the cell geometry in units of geom projection
@@ -11,9 +11,10 @@
 #' @details Intersection is performed with cell centers then geometry is constructed.
 #' A buffer may be required to fully cover geometry with cells.
 #'
-#' @importFrom sf st_sf st_as_sf st_as_sfc st_bbox st_transform st_buffer st_geometry st_union
-#' st_voronoi st_cast st_intersection st_join st_contains st_convex_hull st_distance
+#' @importFrom sf st_sf st_as_sf st_as_sfc st_bbox st_transform st_buffer st_intersection
+#' st_join st_contains "st_crs<-"
 #' @importFrom dplyr filter
+#' @importFrom stars st_as_stars st_dimensions
 #' @export
 #' @examples
 #' library(RNetCDF)
@@ -54,7 +55,7 @@
 #' plot(cell_geometry$geometry, lwd = 0.25)
 #' plot(st_transform(geom$geometry, prj), add = TRUE)
 #'
-create_cell_geometry <- function(x, y, prj, geom = NULL, buffer_dist = 0) {
+create_cell_geometry <- function(col_coords, row_coords, prj, geom = NULL, buffer_dist = 0) {
 
   # For 2d lat/lon
   # x <- matrix(rep(c(1:ncol(lon)), nrow(lon)),
@@ -71,8 +72,8 @@ create_cell_geometry <- function(x, y, prj, geom = NULL, buffer_dist = 0) {
   #                         lat = matrix(lat, ncol = 1))
 
   # cell size
-  dif_dist_x <- diff(x)
-  dif_dist_y <- diff(y)
+  dif_dist_x <- diff(col_coords)
+  dif_dist_y <- diff(row_coords)
 
   if (any(diff(dif_dist_x) > 1e-10) | any(diff(dif_dist_y) > 1e-10)) {
     stop("only regular rasters supported")
@@ -81,7 +82,7 @@ create_cell_geometry <- function(x, y, prj, geom = NULL, buffer_dist = 0) {
     dif_dist_y <- mean(dif_dist_y)
   }
 
-  sf_points <- construct_points(x, y, prj)
+  sf_points <- construct_points(col_coords, row_coords, prj)
 
   if (!is.null(geom)) {
     # intersect in projection of geometry
@@ -91,26 +92,27 @@ create_cell_geometry <- function(x, y, prj, geom = NULL, buffer_dist = 0) {
 
     # grab all the rows and cols needed.
     sf_points <- filter(sf_points,
-                          x_ind >= min(sf_points_filter$x_ind) &
-                          x_ind <= max(sf_points_filter$x_ind) &
-                          y_ind >= min(sf_points_filter$y_ind) &
-                          y_ind <= max(sf_points_filter$y_ind))
+                          col_ind >= min(sf_points_filter$col_ind) &
+                          col_ind <= max(sf_points_filter$col_ind) &
+                          row_ind >= min(sf_points_filter$row_ind) &
+                          row_ind <= max(sf_points_filter$row_ind))
   }
 
-  x <- x[min(sf_points$x_ind):max(sf_points$x_ind)]
-  y <- y[min(sf_points$y_ind):max(sf_points$y_ind)]
+  col_coords <- col_coords[min(sf_points$col_ind):max(sf_points$col_ind)]
+  row_coords <- row_coords[min(sf_points$row_ind):max(sf_points$row_ind)]
 
-  sf_polygons <- get_ids(length(x), length(y))
-  dim(sf_polygons) <- c(x = length(y), y = length(x))
+  sf_polygons <- get_ids(length(col_coords), length(row_coords))
+  dim(sf_polygons) <- c(x = length(col_coords), y = length(row_coords))
 
-  sf_polygons <- st_as_sf(
-    stars::st_as_stars(raster::raster(sf_polygons,
-                                      xmn = min(x) - 0.5 * dif_dist_x,
-                                      xmx = max(x) + 0.5 * dif_dist_x,
-                                      ymn = min(y) + 0.5 * dif_dist_y,
-                                      ymx = max(y) - 0.5 * dif_dist_y,
-                                      crs = prj)),
-    as_points = FALSE)
+  sf_polygons <- st_as_stars(list(sf_polygons = sf_polygons),
+                         dimensions = st_dimensions(x = as.numeric(col_coords),
+                                                    y = as.numeric(row_coords),
+                                                    .raster = c("x", "y"),
+                                                    cell_midpoints = TRUE))
+
+  st_crs(sf_polygons) <- st_crs(prj)
+
+  sf_polygons <- st_as_sf(sf_polygons, as_points = FALSE)
 
   names(sf_polygons)[1] <- "grid_ids"
 
@@ -126,24 +128,24 @@ construct_points <- function(x, y, prj) {
                    byrow = T)
   y_vals <- matrix(y, nrow = length(y), ncol = length(x),
                    byrow = F)
-  x_ind <- matrix(rep(c(1:ncol(x_vals)), nrow(x_vals)),
+  col_ind <- matrix(rep(c(1:ncol(x_vals)), nrow(x_vals)),
                   nrow = nrow(x_vals), ncol = ncol(x_vals),
                   byrow = TRUE)
-  y_ind <- matrix(rep(c(1:nrow(x_vals)), ncol(x_vals)),
+  row_ind <- matrix(rep(c(1:nrow(x_vals)), ncol(x_vals)),
                   nrow = nrow(x_vals), ncol = ncol(x_vals),
                   byrow = FALSE)
 
   sf_points <- st_as_sf(data.frame(x = matrix(x_vals, ncol = 1),
                                    y = matrix(y_vals, ncol = 1),
-                                   x_ind = matrix(x_ind, ncol = 1),
-                                   y_ind = matrix(y_ind, ncol = 1)),
+                                   col_ind = matrix(col_ind, ncol = 1),
+                                   row_ind = matrix(row_ind, ncol = 1)),
                         coords = c("x", "y"),
                         crs = prj,
                         agr = "constant")
 }
 
 get_ids <- function(x_size, y_size) {
-  matrix(seq(1, x_size * y_size),
-         nrow = y_size, ncol = x_size,
+  matrix(as.numeric(seq(1, x_size * y_size)),
+         nrow = x_size, ncol = y_size,
          byrow = T)
 }

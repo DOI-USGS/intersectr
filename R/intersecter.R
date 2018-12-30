@@ -1,7 +1,7 @@
 # unquoted variables
 . <- varx <- vary <- part_area <- w <- NULL
 
-x_ind <- y_ind <- d <- poly_id <- NULL
+col_ind <- row_ind <- d <- poly_id <- NULL
 
 # Taken from: https://github.com/ramhiser/retry/blob/master/R/try-backoff.r
 # Un exported from retry package so including directly.

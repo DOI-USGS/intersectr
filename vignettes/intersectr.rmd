@@ -1,8 +1,11 @@
 ---
 title: "intersectr"
 author: "dblodgett@usgs.gov"
-date: "12/28/2018"
-output: html_document
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{pkgdown}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include = FALSE}
@@ -59,16 +62,16 @@ intersected <- execute_intersection(nc_file,
                                     cell_geometry,
                                     x_var, y_var, t_var)
 
-x_inds <- seq(min(cell_geometry$x_ind), max(cell_geometry$x_ind), 1)
-y_inds <- seq(min(cell_geometry$y_ind), max(cell_geometry$y_ind), 1)
+col_inds <- seq(min(cell_geometry$col_ind), max(cell_geometry$col_ind), 1)
+row_inds <- seq(min(cell_geometry$row_ind), max(cell_geometry$row_ind), 1)
 
-ids <- intersectr:::get_ids(length(x_inds), length(y_inds))
+ids <- intersectr:::get_ids(length(col_inds), length(row_inds))
 
 grid_data <- RNetCDF::var.get.nc(nc, variable_name,
-                                 start = c(min(x_inds), min(y_inds), 3),
-                                 count = c(length(x_inds), length(y_inds), 1))
+                                 start = c(min(col_inds), min(row_inds), 3),
+                                 count = c(length(col_inds), length(row_inds), 1))
 
-grid_data <- data.frame(grid_data = matrix(t(grid_data), # note t() here!!!
+grid_data <- data.frame(grid_data = matrix(grid_data, # note t() here!!!
                                            ncol = 1,
                                            byrow = TRUE),
                         grid_ids = matrix(ids, ncol = 1))

@@ -4,12 +4,13 @@
 \alias{create_cell_geometry}
 \title{Create Cell Geometry}
 \usage{
-create_cell_geometry(x, y, prj, geom = NULL, buffer_dist = 0)
+create_cell_geometry(col_coords, row_coords, prj, geom = NULL,
+  buffer_dist = 0)
 }
 \arguments{
-\item{x}{numeric center positions of x indices}
+\item{col_coords}{numeric center positions of x indices}
 
-\item{y}{numeric center positions of y indices}
+\item{row_coords}{numeric center positions of y indices}
 
 \item{prj}{character proj4 string for x and y}
 

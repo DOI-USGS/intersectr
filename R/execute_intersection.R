@@ -7,7 +7,7 @@
 #' @param variable_name character name of variable in NetCDF source to access
 #' @param intersection_weights data.frame as output by
 #' \code{\link{calculate_area_intersection_weights}}
-#' @param cell_geometry sf data.frame with x_ind and y_ind columns as output by
+#' @param cell_geometry sf data.frame with col_ind and row_ind columns as output by
 #' \code{\link{create_cell_geometry}}
 #' @param x_var character variable with X axis data
 #' @param y_var character variable with Y axis data
@@ -56,14 +56,14 @@
 #' intersected <- execute_intersection(nc_file, variable_name, area_weights,
 #'                                     cell_geometry, x_var, y_var, t_var)
 #'
-#' x_inds <- seq(min(cell_geometry$x_ind), max(cell_geometry$x_ind), 1)
-#' y_inds <- seq(min(cell_geometry$y_ind), max(cell_geometry$y_ind), 1)
+#' col_inds <- seq(min(cell_geometry$col_ind), max(cell_geometry$col_ind), 1)
+#' row_inds <- seq(min(cell_geometry$row_ind), max(cell_geometry$row_ind), 1)
 #'
-#' ids <- intersectr:::get_ids(length(x_inds), length(y_inds))
+#' ids <- intersectr:::get_ids(length(col_inds), length(row_inds))
 #'
 #' grid_data <- RNetCDF::var.get.nc(nc, variable_name,
-#'                                  start = c(min(x_inds), min(y_inds), 5),
-#'                                  count = c(length(x_inds), length(y_inds), 1))
+#'                                  start = c(min(col_inds), min(row_inds), 5),
+#'                                  count = c(length(col_inds), length(row_inds), 1))
 #'
 #' grid_data <- data.frame(grid_data = matrix(t(grid_data), # note t() here!!!
 #'                                            ncol = 1,
@@ -105,21 +105,21 @@ execute_intersection <- function(nc_file,
 
   if (nc_var_info$ndims != 3) stop("only 3d variables are supported")
 
-  x_var_info <- var.inq.nc(nc, x_var)
-  y_var_info <- var.inq.nc(nc, y_var)
+  col_var_info <- var.inq.nc(nc, x_var)
+  row_var_info <- var.inq.nc(nc, y_var)
   t_var_info <- var.inq.nc(nc, t_var)
 
-  if (x_var_info$ndims > 1 | y_var_info$ndims > 1 | t_var_info$ndims > 1)
+  if (col_var_info$ndims > 1 | row_var_info$ndims > 1 | t_var_info$ndims > 1)
     stop("only 1d coordinate variables supported")
 
   time_steps <- utcal.nc(att.get.nc(nc, t_var_info$name, "units"),
                          var.get.nc(nc, t_var_info$name), "c")
   time_steps <- data.frame(time_stamp = time_steps)
 
-  x_inds <- seq(min(cell_geometry$x_ind), max(cell_geometry$x_ind), 1)
-  y_inds <- seq(min(cell_geometry$y_ind), max(cell_geometry$y_ind), 1)
+  col_inds <- seq(min(cell_geometry$col_ind), max(cell_geometry$col_ind), 1)
+  row_inds <- seq(min(cell_geometry$row_ind), max(cell_geometry$row_ind), 1)
 
-  ids <- get_ids(length(x_inds), length(y_inds))
+  ids <- get_ids(length(col_inds), length(row_inds))
 
   if (is.null(start_datetime) & is.null(end_datetime)) {
 
@@ -153,19 +153,19 @@ execute_intersection <- function(nc_file,
     out <- matrix(nrow = out_nrows, ncol = out_ncols)
 
     dimid_order <- match(nc_var_info$dimids,
-                         c(x_var_info$dimids,
-                           y_var_info$dimids,
+                         c(col_var_info$dimids,
+                           row_var_info$dimids,
                            t_var_info$dimids))
 
     for (i in 1:out_nrows) {
       try_backoff({
         i_data <- var.get.nc(nc, variable_name,
-                             start = c(min(x_inds),
-                                       min(y_inds), i)[dimid_order],
-                             count = c(length(x_inds),
-                                       length(y_inds), 1)[dimid_order])
+                             start = c(min(col_inds),
+                                       min(row_inds), i)[dimid_order],
+                             count = c(length(col_inds),
+                                       length(row_inds), 1)[dimid_order])
 
-        i_data <- data.frame(d = matrix(t(i_data), # note t() here!!!
+        i_data <- data.frame(d = matrix(i_data,
                                         ncol = 1,
                                         byrow = TRUE),
                              grid_ids = matrix(ids, ncol = 1))

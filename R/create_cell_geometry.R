@@ -92,16 +92,16 @@ create_cell_geometry <- function(col_coords, row_coords, prj, geom = NULL, buffe
 
     # grab all the rows and cols needed.
     sf_points <- filter(sf_points,
-                          x_ind >= min(sf_points_filter$x_ind) &
-                          x_ind <= max(sf_points_filter$x_ind) &
-                          y_ind >= min(sf_points_filter$y_ind) &
-                          y_ind <= max(sf_points_filter$y_ind))
+                          col_ind >= min(sf_points_filter$col_ind) &
+                          col_ind <= max(sf_points_filter$col_ind) &
+                          row_ind >= min(sf_points_filter$row_ind) &
+                          row_ind <= max(sf_points_filter$row_ind))
   }
 
-  col_coords <- col_coords[min(sf_points$x_ind):max(sf_points$x_ind)]
-  row_coords <- row_coords[min(sf_points$y_ind):max(sf_points$y_ind)]
+  col_coords <- col_coords[min(sf_points$col_ind):max(sf_points$col_ind)]
+  row_coords <- row_coords[min(sf_points$row_ind):max(sf_points$row_ind)]
 
-  sf_polygons <- get_ids(length(row_coords), length(col_coords))
+  sf_polygons <- get_ids(length(col_coords), length(row_coords))
   dim(sf_polygons) <- c(x = length(col_coords), y = length(row_coords))
 
   sf_polygons <- st_as_stars(list(sf_polygons = sf_polygons),
@@ -128,17 +128,17 @@ construct_points <- function(x, y, prj) {
                    byrow = T)
   y_vals <- matrix(y, nrow = length(y), ncol = length(x),
                    byrow = F)
-  x_ind <- matrix(rep(c(1:ncol(x_vals)), nrow(x_vals)),
+  col_ind <- matrix(rep(c(1:ncol(x_vals)), nrow(x_vals)),
                   nrow = nrow(x_vals), ncol = ncol(x_vals),
                   byrow = TRUE)
-  y_ind <- matrix(rep(c(1:nrow(x_vals)), ncol(x_vals)),
+  row_ind <- matrix(rep(c(1:nrow(x_vals)), ncol(x_vals)),
                   nrow = nrow(x_vals), ncol = ncol(x_vals),
                   byrow = FALSE)
 
   sf_points <- st_as_sf(data.frame(x = matrix(x_vals, ncol = 1),
                                    y = matrix(y_vals, ncol = 1),
-                                   x_ind = matrix(x_ind, ncol = 1),
-                                   y_ind = matrix(y_ind, ncol = 1)),
+                                   col_ind = matrix(col_ind, ncol = 1),
+                                   row_ind = matrix(row_ind, ncol = 1)),
                         coords = c("x", "y"),
                         crs = prj,
                         agr = "constant")
@@ -146,6 +146,6 @@ construct_points <- function(x, y, prj) {
 
 get_ids <- function(x_size, y_size) {
   matrix(as.numeric(seq(1, x_size * y_size)),
-         nrow = y_size, ncol = x_size,
+         nrow = x_size, ncol = y_size,
          byrow = T)
 }

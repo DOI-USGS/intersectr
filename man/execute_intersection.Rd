@@ -16,7 +16,7 @@ execute_intersection(nc_file, variable_name, intersection_weights,
 \item{intersection_weights}{data.frame as output by
 \code{\link{calculate_area_intersection_weights}}}
 
-\item{cell_geometry}{sf data.frame with x_ind and y_ind columns as output by
+\item{cell_geometry}{sf data.frame with col_ind and row_ind columns as output by
 \code{\link{create_cell_geometry}}}
 
 \item{x_var}{character variable with X axis data}
@@ -72,14 +72,14 @@ area_weights <- calculate_area_intersection_weights(
 intersected <- execute_intersection(nc_file, variable_name, area_weights,
                                     cell_geometry, x_var, y_var, t_var)
 
-x_inds <- seq(min(cell_geometry$x_ind), max(cell_geometry$x_ind), 1)
-y_inds <- seq(min(cell_geometry$y_ind), max(cell_geometry$y_ind), 1)
+col_inds <- seq(min(cell_geometry$col_ind), max(cell_geometry$col_ind), 1)
+row_inds <- seq(min(cell_geometry$row_ind), max(cell_geometry$row_ind), 1)
 
-ids <- intersectr:::get_ids(length(x_inds), length(y_inds))
+ids <- intersectr:::get_ids(length(col_inds), length(row_inds))
 
 grid_data <- RNetCDF::var.get.nc(nc, variable_name,
-                                 start = c(min(x_inds), min(y_inds), 5),
-                                 count = c(length(x_inds), length(y_inds), 1))
+                                 start = c(min(col_inds), min(row_inds), 5),
+                                 count = c(length(col_inds), length(row_inds), 1))
 
 grid_data <- data.frame(grid_data = matrix(t(grid_data), # note t() here!!!
                                            ncol = 1,

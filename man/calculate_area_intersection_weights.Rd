@@ -12,16 +12,17 @@ calculate_area_intersection_weights(x, y)
 \item{y}{sf data.frame including one geometry column and one identifier column}
 }
 \value{
-data.frame containing fraction of each feature in y that is
-covered by each feature in x.
-s
+data.frame containing fraction of each feature in x that is
+covered by each feature in y. e.g. If a feature from x is entirely within a feature in y,
+w will be 1. If a feature from x is 50% in one feature for y and 50% in another, there
+will be two rows, one for each x/y pair of features with w = 0.5 in each.
 }
 \description{
 Returns the fractional percent of each
-feature in y that is covered by each intersecting feature
-in x. These can be used as the weights in an area-weighted
-mean overlay analysis where y is the data source and area-
-weighted means are being generated for x.
+feature in x that is covered by each intersecting feature
+in y. These can be used as the weights in an area-weighted
+mean overlay analysis where x is the data source and area-
+weighted means are being generated for y.
 }
 \details{
 THIS WILL NOT WORK WITH SELF INTERSECTIONS!!!!!

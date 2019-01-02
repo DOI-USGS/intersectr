@@ -11,8 +11,8 @@
 #' @details Intersection is performed with cell centers then geometry is constructed.
 #' A buffer may be required to fully cover geometry with cells.
 #'
-#' @importFrom sf st_sf st_as_sf st_as_sfc st_bbox st_transform st_buffer st_intersection
-#' st_join st_contains "st_crs<-"
+#' @importFrom sf st_sf st_as_sf st_transform st_buffer st_intersection st_convex_hull
+#' st_join st_contains "st_crs<-" st_union
 #' @importFrom dplyr filter
 #' @importFrom stars st_as_stars st_dimensions
 #' @export
@@ -36,10 +36,10 @@
 #' x_var <- "lon"
 #' y_var <- "lat"
 #'
-#' grid_mapping <- att.get.nc(nc, var - 1, "grid_mapping")
+#   grid_mapping <- get_grid_mapping(nc)
 #'
 #' if (!is.null(grid_mapping)) {
-#'   prj <- ncdfgeom::get_prj(gm_atts)
+#'   prj <- ncdfgeom::get_prj(grid_mapping)
 #' } else {
 #'   prj <- "+init=epsg:4326"
 #'   warning("No grid mapping found. Assuming WGS84")
@@ -75,7 +75,7 @@ create_cell_geometry <- function(col_coords, row_coords, prj, geom = NULL, buffe
   dif_dist_x <- diff(col_coords)
   dif_dist_y <- diff(row_coords)
 
-  if (any(diff(dif_dist_x) > 1e-4) | any(diff(dif_dist_y) > 1e-4)) {
+  if (any(diff(dif_dist_x) > 1e-10) | any(diff(dif_dist_y) > 1e-10)) {
     stop("only regular rasters supported")
   } else {
     dif_dist_x <- mean(dif_dist_x)
@@ -88,7 +88,7 @@ create_cell_geometry <- function(col_coords, row_coords, prj, geom = NULL, buffe
     # intersect in projection of geometry
     sf_points_filter <- st_intersection(
       st_transform(sf_points, st_crs(geom)),
-      st_buffer(st_as_sfc(st_bbox(geom)), buffer_dist))
+      st_buffer(st_union(geom), buffer_dist))
 
     # grab all the rows and cols needed.
     sf_points <- filter(sf_points,

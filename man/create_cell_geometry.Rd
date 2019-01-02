@@ -45,10 +45,9 @@ print(coordinates)
 x_var <- "lon"
 y_var <- "lat"
 
-grid_mapping <- att.get.nc(nc, var - 1, "grid_mapping")
 
 if (!is.null(grid_mapping)) {
-  prj <- ncdfgeom::get_prj(gm_atts)
+  prj <- ncdfgeom::get_prj(grid_mapping)
 } else {
   prj <- "+init=epsg:4326"
   warning("No grid mapping found. Assuming WGS84")

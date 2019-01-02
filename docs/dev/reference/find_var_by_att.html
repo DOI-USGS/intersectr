@@ -82,6 +82,18 @@ searches for and returns variables with the desired attribute." />
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Articles
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/prism_demo.html">Complete intersectr demo</a>
+    </li>
+  </ul>
+</li>
       </ul>
       
       <ul class="nav navbar-nav navbar-right">
@@ -145,8 +157,8 @@ attribute with the given value</p></td>
     <pre class="examples"><div class='input'><span class='no'>nc</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/system.file'>system.file</a></span>(<span class='st'>"extdata/metdata.nc"</span>, <span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"intersectr"</span>)
 
 <span class='fu'>find_var_by_att</span>(<span class='no'>nc</span>, <span class='st'>"coordinates"</span>)</div><div class='output co'>#&gt; [1] "precipitation_amount"</div><div class='input'>
-<span class='fu'>find_var_by_att</span>(<span class='no'>nc</span>, <span class='st'>"units"</span>)</div><div class='output co'>#&gt; [1] "day"                  "lat"                  "lon"                 
-#&gt; [4] "precipitation_amount"</div><div class='input'>
+<span class='fu'>find_var_by_att</span>(<span class='no'>nc</span>, <span class='st'>"units"</span>)</div><div class='output co'>#&gt; [1] "precipitation_amount" "day"                  "lat"                 
+#&gt; [4] "lon"                 </div><div class='input'>
 <span class='fu'>find_var_by_att</span>(<span class='no'>nc</span>, <span class='st'>"units"</span>, <span class='st'>"degrees"</span>, <span class='kw'>strict</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</div><div class='output co'>#&gt; [1] "lat" "lon"</div><div class='input'>
 <span class='fu'>find_var_by_att</span>(<span class='no'>nc</span>, <span class='st'>"units"</span>, <span class='st'>"degrees"</span>, <span class='kw'>strict</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; character(0)</div><div class='input'>
 <span class='fu'>find_var_by_att</span>(<span class='no'>nc</span>, <span class='st'>"units"</span>, <span class='st'>"degrees_east"</span>, <span class='kw'>strict</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; [1] "lon"</div><div class='input'>

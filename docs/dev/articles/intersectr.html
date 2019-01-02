@@ -49,6 +49,18 @@
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Articles
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+<li>
+      <a href="../articles/prism_demo.html">Complete intersectr demo</a>
+    </li>
+  </ul>
+</li>
       </ul>
 <ul class="nav navbar-nav navbar-right">
 <li>
@@ -80,10 +92,10 @@
 
     
     
-<div id="demo" class="section level2">
+<div id="introduction-to-intersectr" class="section level2">
 <h2 class="hasAnchor">
-<a href="#demo" class="anchor"></a>Demo</h2>
-<p>This is a simple demo showing what intersectr can do. Derived from one of the tests for now. More later!</p>
+<a href="#introduction-to-intersectr" class="anchor"></a>Introduction to intersectr</h2>
+<p>This is a simple demo showing what intersectr can do. In this demonstration, local data is used. See other package articles for details.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(intersectr)</a>
 <a class="sourceLine" id="cb1-2" title="2"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(dplyr)</a>
 <a class="sourceLine" id="cb1-3" title="3"><span class="co">#&gt; </span></a>
@@ -96,72 +108,100 @@
 <a class="sourceLine" id="cb1-10" title="10"><span class="co">#&gt;     intersect, setdiff, setequal, union</span></a>
 <a class="sourceLine" id="cb1-11" title="11"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(sf)</a>
 <a class="sourceLine" id="cb1-12" title="12"><span class="co">#&gt; Linking to GEOS 3.7.1, GDAL 2.3.2, PROJ 5.2.0</span></a>
-<a class="sourceLine" id="cb1-13" title="13"></a>
-<a class="sourceLine" id="cb1-14" title="14">variable_name &lt;-<span class="st"> "prcp"</span></a>
-<a class="sourceLine" id="cb1-15" title="15">nc_file &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/system.file">system.file</a></span>(<span class="st">"extdata/daymet.nc"</span>, <span class="dt">package =</span> <span class="st">"intersectr"</span>)</a>
-<a class="sourceLine" id="cb1-16" title="16">nc &lt;-<span class="st"> </span>RNetCDF<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/RNetCDF/topics/open.nc">open.nc</a></span>(nc_file)</a>
-<a class="sourceLine" id="cb1-17" title="17">x_var &lt;-<span class="st"> "x"</span></a>
-<a class="sourceLine" id="cb1-18" title="18">y_var &lt;-<span class="st"> "y"</span></a>
-<a class="sourceLine" id="cb1-19" title="19">t_var &lt;-<span class="st"> "time"</span></a>
-<a class="sourceLine" id="cb1-20" title="20"></a>
-<a class="sourceLine" id="cb1-21" title="21">x &lt;-<span class="st"> </span>RNetCDF<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/RNetCDF/topics/var.get.nc">var.get.nc</a></span>(nc, x_var) <span class="op">*</span><span class="st"> </span><span class="dv">1000</span></a>
-<a class="sourceLine" id="cb1-22" title="22">y &lt;-<span class="st"> </span>RNetCDF<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/RNetCDF/topics/var.get.nc">var.get.nc</a></span>(nc, y_var) <span class="op">*</span><span class="st"> </span><span class="dv">1000</span></a>
-<a class="sourceLine" id="cb1-23" title="23"></a>
-<a class="sourceLine" id="cb1-24" title="24">geom &lt;-<span class="st"> </span>sf<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/sf/topics/st_read">read_sf</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/system.file">system.file</a></span>(<span class="st">"shape/nc.shp"</span>, <span class="dt">package =</span> <span class="st">"sf"</span>))</a>
+<a class="sourceLine" id="cb1-13" title="13"><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/library">library</a></span>(RNetCDF)</a>
+<a class="sourceLine" id="cb1-14" title="14"></a>
+<a class="sourceLine" id="cb1-15" title="15"><span class="co"># Set an analysis projection to do intersection in.</span></a>
+<a class="sourceLine" id="cb1-16" title="16">analysis_projection &lt;-<span class="st"> "+init=epsg:5070"</span></a>
+<a class="sourceLine" id="cb1-17" title="17"></a>
+<a class="sourceLine" id="cb1-18" title="18"><span class="co"># Use a sample file from the package.</span></a>
+<a class="sourceLine" id="cb1-19" title="19">nc_file &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/system.file">system.file</a></span>(<span class="st">"extdata/daymet.nc"</span>, <span class="dt">package =</span> <span class="st">"intersectr"</span>)</a>
+<a class="sourceLine" id="cb1-20" title="20">nc &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/RNetCDF/topics/open.nc">open.nc</a></span>(nc_file)</a>
+<a class="sourceLine" id="cb1-21" title="21"></a>
+<a class="sourceLine" id="cb1-22" title="22"><span class="co"># Use a sample geometry from sf.</span></a>
+<a class="sourceLine" id="cb1-23" title="23">geom &lt;-<span class="st"> </span>sf<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/sf/topics/st_read">read_sf</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/system.file">system.file</a></span>(<span class="st">"shape/nc.shp"</span>, <span class="dt">package =</span> <span class="st">"sf"</span>)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb1-24" title="24"><span class="st">  </span><span class="kw"><a href="https://www.rdocumentation.org/packages/sf/topics/st_transform">st_transform</a></span>(analysis_projection)</a>
 <a class="sourceLine" id="cb1-25" title="25"></a>
-<a class="sourceLine" id="cb1-26" title="26">grid_mapping &lt;-<span class="st"> </span><span class="kw"><a href="../reference/get_grid_mapping.html">get_grid_mapping</a></span>(nc)</a>
-<a class="sourceLine" id="cb1-27" title="27"></a>
-<a class="sourceLine" id="cb1-28" title="28">in_prj &lt;-<span class="st"> </span>ncdfgeom<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/ncdfgeom/topics/get_prj">get_prj</a></span>(grid_mapping)</a>
-<a class="sourceLine" id="cb1-29" title="29"></a>
-<a class="sourceLine" id="cb1-30" title="30">cell_geometry &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/warning">suppressWarnings</a></span>(</a>
-<a class="sourceLine" id="cb1-31" title="31">  <span class="kw"><a href="../reference/create_cell_geometry.html">create_cell_geometry</a></span>(x, y, in_prj, geom, <span class="dv">1000</span>))</a>
-<a class="sourceLine" id="cb1-32" title="32"><span class="co">#&gt; dist is assumed to be in decimal degrees (arc_degrees).</span></a>
-<a class="sourceLine" id="cb1-33" title="33"><span class="co">#&gt; although coordinates are longitude/latitude, st_intersection assumes that they are planar</span></a>
-<a class="sourceLine" id="cb1-34" title="34"></a>
-<a class="sourceLine" id="cb1-35" title="35">data_source_cells &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/sf/topics/sf">st_sf</a></span>(<span class="kw"><a href="http://dplyr.tidyverse.org/reference/select.html">select</a></span>(cell_geometry, grid_ids))</a>
-<a class="sourceLine" id="cb1-36" title="36">target_polygons &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/sf/topics/sf">st_sf</a></span>(<span class="kw"><a href="http://dplyr.tidyverse.org/reference/select.html">select</a></span>(geom, CNTY_ID))</a>
-<a class="sourceLine" id="cb1-37" title="37"></a>
-<a class="sourceLine" id="cb1-38" title="38">sf<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/sf/topics/st_agr">st_agr</a></span>(data_source_cells) &lt;-<span class="st"> "constant"</span></a>
-<a class="sourceLine" id="cb1-39" title="39">sf<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/sf/topics/st_agr">st_agr</a></span>(target_polygons) &lt;-<span class="st"> "constant"</span></a>
-<a class="sourceLine" id="cb1-40" title="40"></a>
-<a class="sourceLine" id="cb1-41" title="41">area_weights &lt;-<span class="st"> </span><span class="kw"><a href="../reference/calculate_area_intersection_weights.html">calculate_area_intersection_weights</a></span>(</a>
-<a class="sourceLine" id="cb1-42" title="42">  data_source_cells,</a>
-<a class="sourceLine" id="cb1-43" title="43">  target_polygons)</a>
-<a class="sourceLine" id="cb1-44" title="44"><span class="co">#&gt; although coordinates are longitude/latitude, st_intersection assumes that they are planar</span></a>
-<a class="sourceLine" id="cb1-45" title="45"></a>
-<a class="sourceLine" id="cb1-46" title="46">intersected &lt;-<span class="st"> </span><span class="kw"><a href="../reference/execute_intersection.html">execute_intersection</a></span>(nc_file,</a>
-<a class="sourceLine" id="cb1-47" title="47">                                    variable_name,</a>
-<a class="sourceLine" id="cb1-48" title="48">                                    area_weights,</a>
-<a class="sourceLine" id="cb1-49" title="49">                                    cell_geometry,</a>
-<a class="sourceLine" id="cb1-50" title="50">                                    x_var, y_var, t_var)</a>
-<a class="sourceLine" id="cb1-51" title="51"></a>
-<a class="sourceLine" id="cb1-52" title="52">col_inds &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/seq">seq</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">min</a></span>(cell_geometry<span class="op">$</span>col_ind), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">max</a></span>(cell_geometry<span class="op">$</span>col_ind), <span class="dv">1</span>)</a>
-<a class="sourceLine" id="cb1-53" title="53">row_inds &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/seq">seq</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">min</a></span>(cell_geometry<span class="op">$</span>row_ind), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">max</a></span>(cell_geometry<span class="op">$</span>row_ind), <span class="dv">1</span>)</a>
-<a class="sourceLine" id="cb1-54" title="54"></a>
-<a class="sourceLine" id="cb1-55" title="55">ids &lt;-<span class="st"> </span>intersectr<span class="op">:::</span><span class="kw">get_ids</span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(col_inds), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(row_inds))</a>
-<a class="sourceLine" id="cb1-56" title="56"></a>
-<a class="sourceLine" id="cb1-57" title="57">grid_data &lt;-<span class="st"> </span>RNetCDF<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/RNetCDF/topics/var.get.nc">var.get.nc</a></span>(nc, variable_name,</a>
-<a class="sourceLine" id="cb1-58" title="58">                                 <span class="dt">start =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">min</a></span>(col_inds), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">min</a></span>(row_inds), <span class="dv">3</span>),</a>
-<a class="sourceLine" id="cb1-59" title="59">                                 <span class="dt">count =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(col_inds), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(row_inds), <span class="dv">1</span>))</a>
-<a class="sourceLine" id="cb1-60" title="60"></a>
-<a class="sourceLine" id="cb1-61" title="61">grid_data &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/data.frame">data.frame</a></span>(<span class="dt">grid_data =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/matrix">matrix</a></span>(grid_data, <span class="co"># note t() here!!!</span></a>
-<a class="sourceLine" id="cb1-62" title="62">                                           <span class="dt">ncol =</span> <span class="dv">1</span>,</a>
-<a class="sourceLine" id="cb1-63" title="63">                                           <span class="dt">byrow =</span> <span class="ot">TRUE</span>),</a>
-<a class="sourceLine" id="cb1-64" title="64">                        <span class="dt">grid_ids =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/matrix">matrix</a></span>(ids, <span class="dt">ncol =</span> <span class="dv">1</span>))</a>
+<a class="sourceLine" id="cb1-26" title="26"><span class="co"># Look at what variables are available.</span></a>
+<a class="sourceLine" id="cb1-27" title="27">(nc_var &lt;-<span class="st"> </span>ncmeta<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/ncmeta/topics/nc_vars">nc_vars</a></span>(nc))</a>
+<a class="sourceLine" id="cb1-28" title="28"><span class="co">#&gt; # A tibble: 5 x 5</span></a>
+<a class="sourceLine" id="cb1-29" title="29"><span class="co">#&gt;      id name                    type      ndims natts</span></a>
+<a class="sourceLine" id="cb1-30" title="30"><span class="co">#&gt;   &lt;dbl&gt; &lt;chr&gt;                   &lt;chr&gt;     &lt;dbl&gt; &lt;dbl&gt;</span></a>
+<a class="sourceLine" id="cb1-31" title="31"><span class="co">#&gt; 1     0 prcp                    NC_FLOAT      3     9</span></a>
+<a class="sourceLine" id="cb1-32" title="32"><span class="co">#&gt; 2     1 time                    NC_DOUBLE     1     6</span></a>
+<a class="sourceLine" id="cb1-33" title="33"><span class="co">#&gt; 3     2 y                       NC_FLOAT      1     2</span></a>
+<a class="sourceLine" id="cb1-34" title="34"><span class="co">#&gt; 4     3 x                       NC_FLOAT      1     2</span></a>
+<a class="sourceLine" id="cb1-35" title="35"><span class="co">#&gt; 5     4 lambert_conformal_conic NC_SHORT      0    11</span></a>
+<a class="sourceLine" id="cb1-36" title="36"></a>
+<a class="sourceLine" id="cb1-37" title="37"><span class="co"># Choose a variable and get coordinate variables.</span></a>
+<a class="sourceLine" id="cb1-38" title="38">variable_name &lt;-<span class="st"> "prcp"</span></a>
+<a class="sourceLine" id="cb1-39" title="39">(nc_coord_vars &lt;-<span class="st"> </span>ncmeta<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/ncmeta/topics/nc_coord_var">nc_coord_var</a></span>(nc, variable_name))</a>
+<a class="sourceLine" id="cb1-40" title="40"><span class="co">#&gt; Warning in nc_coord_var_finder(dim, var, att, axe, variable): missing</span></a>
+<a class="sourceLine" id="cb1-41" title="41"><span class="co">#&gt; coordinate variables names in coordinates attribute trying to find non-</span></a>
+<a class="sourceLine" id="cb1-42" title="42"><span class="co">#&gt; auxiliary coordinate variables.</span></a>
+<a class="sourceLine" id="cb1-43" title="43"><span class="co">#&gt; # A tibble: 1 x 5</span></a>
+<a class="sourceLine" id="cb1-44" title="44"><span class="co">#&gt;   variable X     Y     Z     T    </span></a>
+<a class="sourceLine" id="cb1-45" title="45"><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;</span></a>
+<a class="sourceLine" id="cb1-46" title="46"><span class="co">#&gt; 1 prcp     x     y     &lt;NA&gt;  time</span></a>
+<a class="sourceLine" id="cb1-47" title="47"></a>
+<a class="sourceLine" id="cb1-48" title="48"><span class="co"># Pull out the coordinate variables and get them in projection units.</span></a>
+<a class="sourceLine" id="cb1-49" title="49">meters_per_km &lt;-<span class="st"> </span><span class="dv">1000</span></a>
+<a class="sourceLine" id="cb1-50" title="50">x &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/RNetCDF/topics/var.get.nc">var.get.nc</a></span>(nc, nc_coord_vars<span class="op">$</span>X) <span class="op">*</span><span class="st"> </span>meters_per_km</a>
+<a class="sourceLine" id="cb1-51" title="51">y &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/RNetCDF/topics/var.get.nc">var.get.nc</a></span>(nc, nc_coord_vars<span class="op">$</span>Y) <span class="op">*</span><span class="st"> </span>meters_per_km</a>
+<a class="sourceLine" id="cb1-52" title="52"></a>
+<a class="sourceLine" id="cb1-53" title="53"><span class="co"># Create cell geometry for this geom</span></a>
+<a class="sourceLine" id="cb1-54" title="54">cell_geometry &lt;-<span class="st"> </span><span class="kw"><a href="../reference/create_cell_geometry.html">create_cell_geometry</a></span>(<span class="dt">col_coords =</span> x, </a>
+<a class="sourceLine" id="cb1-55" title="55">                                      <span class="dt">row_coords =</span> y, </a>
+<a class="sourceLine" id="cb1-56" title="56">                                      <span class="dt">prj =</span> ncdfgeom<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/ncdfgeom/topics/get_prj">get_prj</a></span>(<span class="kw"><a href="../reference/get_grid_mapping.html">get_grid_mapping</a></span>(nc)), </a>
+<a class="sourceLine" id="cb1-57" title="57">                                      <span class="dt">geom =</span> geom, </a>
+<a class="sourceLine" id="cb1-58" title="58">                                      <span class="dt">buffer_dist =</span> <span class="dv">1000</span>)</a>
+<a class="sourceLine" id="cb1-59" title="59"></a>
+<a class="sourceLine" id="cb1-60" title="60"><span class="co"># Be explicit about the area intersection geometry and ids.</span></a>
+<a class="sourceLine" id="cb1-61" title="61">data_source_cells &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/sf/topics/sf">st_sf</a></span>(<span class="kw"><a href="http://dplyr.tidyverse.org/reference/select.html">select</a></span>(cell_geometry, grid_ids))</a>
+<a class="sourceLine" id="cb1-62" title="62">target_polygons &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/sf/topics/sf">st_sf</a></span>(<span class="kw"><a href="http://dplyr.tidyverse.org/reference/select.html">select</a></span>(geom, CNTY_ID))</a>
+<a class="sourceLine" id="cb1-63" title="63"><span class="kw"><a href="https://www.rdocumentation.org/packages/sf/topics/st_agr">st_agr</a></span>(data_source_cells) &lt;-<span class="st"> "constant"</span></a>
+<a class="sourceLine" id="cb1-64" title="64"><span class="kw"><a href="https://www.rdocumentation.org/packages/sf/topics/st_agr">st_agr</a></span>(target_polygons) &lt;-<span class="st"> "constant"</span></a>
 <a class="sourceLine" id="cb1-65" title="65"></a>
-<a class="sourceLine" id="cb1-66" title="66">grid_data<span class="op">$</span>grid_data[grid_data<span class="op">$</span>grid_data <span class="op">&lt;</span><span class="st"> </span><span class="dv">0</span>] &lt;-<span class="st"> </span><span class="ot">NA</span></a>
-<a class="sourceLine" id="cb1-67" title="67"></a>
-<a class="sourceLine" id="cb1-68" title="68">grid_data &lt;-<span class="st"> </span><span class="kw"><a href="http://dplyr.tidyverse.org/reference/join.html">left_join</a></span>(cell_geometry, grid_data, <span class="dt">by =</span> <span class="st">"grid_ids"</span>)</a>
+<a class="sourceLine" id="cb1-66" title="66"><span class="co"># Create the areal weights</span></a>
+<a class="sourceLine" id="cb1-67" title="67">area_weights &lt;-<span class="st"> </span></a>
+<a class="sourceLine" id="cb1-68" title="68"><span class="st">  </span><span class="kw"><a href="../reference/calculate_area_intersection_weights.html">calculate_area_intersection_weights</a></span>(data_source_cells, target_polygons)</a>
 <a class="sourceLine" id="cb1-69" title="69"></a>
-<a class="sourceLine" id="cb1-70" title="70">geom_data &lt;-<span class="st"> </span><span class="kw"><a href="http://dplyr.tidyverse.org/reference/select.html">select</a></span>(geom, CNTY_ID) <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb1-71" title="71"><span class="st">  </span><span class="kw"><a href="http://dplyr.tidyverse.org/reference/join.html">left_join</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/data.frame">data.frame</a></span>(<span class="dt">CNTY_ID =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/numeric">as.numeric</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/names">names</a></span>(intersected)[<span class="dv">2</span><span class="op">:</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/nrow">ncol</a></span>(intersected)]),</a>
-<a class="sourceLine" id="cb1-72" title="72">                       <span class="dt">poly_data =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/numeric">as.numeric</a></span>(intersected[<span class="dv">3</span>, <span class="dv">2</span><span class="op">:</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/nrow">ncol</a></span>(intersected)])), <span class="dt">by =</span> <span class="st">"CNTY_ID"</span>)</a>
-<a class="sourceLine" id="cb1-73" title="73"></a>
-<a class="sourceLine" id="cb1-74" title="74">geom_data &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/sf/topics/st_transform">st_transform</a></span>(geom_data, <span class="kw"><a href="https://www.rdocumentation.org/packages/sf/topics/st_crs">st_crs</a></span>(grid_data))</a>
-<a class="sourceLine" id="cb1-75" title="75"></a>
-<a class="sourceLine" id="cb1-76" title="76">breaks &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="dv">0</span>, <span class="dv">40</span>, <span class="dv">60</span>, <span class="dv">100</span>, <span class="dv">150</span>, <span class="dv">200</span>)</a>
-<a class="sourceLine" id="cb1-77" title="77"></a>
-<a class="sourceLine" id="cb1-78" title="78"><span class="kw"><a href="https://www.rdocumentation.org/packages/sf/topics/plot">plot</a></span>(grid_data[<span class="st">"grid_data"</span>], <span class="dt">border =</span> <span class="ot">NA</span>, <span class="dt">breaks =</span> breaks)</a></code></pre></div>
+<a class="sourceLine" id="cb1-70" title="70"><span class="co"># Run the intersection</span></a>
+<a class="sourceLine" id="cb1-71" title="71">intersected &lt;-<span class="st"> </span><span class="kw"><a href="../reference/execute_intersection.html">execute_intersection</a></span>(<span class="dt">nc_file =</span> nc_file,</a>
+<a class="sourceLine" id="cb1-72" title="72">                                    <span class="dt">variable_name =</span> variable_name,</a>
+<a class="sourceLine" id="cb1-73" title="73">                                    <span class="dt">intersection_weights =</span> area_weights,</a>
+<a class="sourceLine" id="cb1-74" title="74">                                    <span class="dt">cell_geometry =</span> cell_geometry,</a>
+<a class="sourceLine" id="cb1-75" title="75">                                    <span class="dt">x_var =</span> nc_coord_vars<span class="op">$</span>X, </a>
+<a class="sourceLine" id="cb1-76" title="76">                                    <span class="dt">y_var =</span> nc_coord_vars<span class="op">$</span>Y, </a>
+<a class="sourceLine" id="cb1-77" title="77">                                    <span class="dt">t_var =</span> nc_coord_vars<span class="op">$</span>T)</a>
+<a class="sourceLine" id="cb1-78" title="78"></a>
+<a class="sourceLine" id="cb1-79" title="79"><span class="co"># Get data ready to create plots.</span></a>
+<a class="sourceLine" id="cb1-80" title="80">col_inds &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/seq">seq</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">min</a></span>(cell_geometry<span class="op">$</span>col_ind), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">max</a></span>(cell_geometry<span class="op">$</span>col_ind), <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb1-81" title="81">row_inds &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/seq">seq</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">min</a></span>(cell_geometry<span class="op">$</span>row_ind), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">max</a></span>(cell_geometry<span class="op">$</span>row_ind), <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb1-82" title="82"></a>
+<a class="sourceLine" id="cb1-83" title="83">ids &lt;-<span class="st"> </span>intersectr<span class="op">:::</span><span class="kw">get_ids</span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(col_inds), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(row_inds))</a>
+<a class="sourceLine" id="cb1-84" title="84"></a>
+<a class="sourceLine" id="cb1-85" title="85">grid_data &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/RNetCDF/topics/var.get.nc">var.get.nc</a></span>(nc, variable_name,</a>
+<a class="sourceLine" id="cb1-86" title="86">                                 <span class="dt">start =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">min</a></span>(col_inds), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">min</a></span>(row_inds), <span class="dv">3</span>),</a>
+<a class="sourceLine" id="cb1-87" title="87">                                 <span class="dt">count =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(col_inds), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(row_inds), <span class="dv">1</span>))</a>
+<a class="sourceLine" id="cb1-88" title="88"></a>
+<a class="sourceLine" id="cb1-89" title="89">grid_data &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/data.frame">data.frame</a></span>(<span class="dt">grid_data =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/matrix">matrix</a></span>(grid_data,</a>
+<a class="sourceLine" id="cb1-90" title="90">                                           <span class="dt">ncol =</span> <span class="dv">1</span>,</a>
+<a class="sourceLine" id="cb1-91" title="91">                                           <span class="dt">byrow =</span> <span class="ot">TRUE</span>),</a>
+<a class="sourceLine" id="cb1-92" title="92">                        <span class="dt">grid_ids =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/matrix">matrix</a></span>(ids, <span class="dt">ncol =</span> <span class="dv">1</span>))</a>
+<a class="sourceLine" id="cb1-93" title="93"></a>
+<a class="sourceLine" id="cb1-94" title="94">grid_data<span class="op">$</span>grid_data[grid_data<span class="op">$</span>grid_data <span class="op">&lt;</span><span class="st"> </span><span class="dv">0</span>] &lt;-<span class="st"> </span><span class="ot">NA</span></a>
+<a class="sourceLine" id="cb1-95" title="95"></a>
+<a class="sourceLine" id="cb1-96" title="96">grid_data &lt;-<span class="st"> </span><span class="kw"><a href="http://dplyr.tidyverse.org/reference/join.html">left_join</a></span>(cell_geometry, grid_data, <span class="dt">by =</span> <span class="st">"grid_ids"</span>)</a>
+<a class="sourceLine" id="cb1-97" title="97"></a>
+<a class="sourceLine" id="cb1-98" title="98">geom_data &lt;-<span class="st"> </span><span class="kw"><a href="http://dplyr.tidyverse.org/reference/select.html">select</a></span>(geom, CNTY_ID) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb1-99" title="99"><span class="st">  </span><span class="kw"><a href="http://dplyr.tidyverse.org/reference/join.html">left_join</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/data.frame">data.frame</a></span>(<span class="dt">CNTY_ID =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/numeric">as.numeric</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/names">names</a></span>(intersected)[<span class="dv">2</span><span class="op">:</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/nrow">ncol</a></span>(intersected)]),</a>
+<a class="sourceLine" id="cb1-100" title="100">                       <span class="dt">poly_data =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/numeric">as.numeric</a></span>(intersected[<span class="dv">3</span>, <span class="dv">2</span><span class="op">:</span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/nrow">ncol</a></span>(intersected)])), <span class="dt">by =</span> <span class="st">"CNTY_ID"</span>)</a>
+<a class="sourceLine" id="cb1-101" title="101"></a>
+<a class="sourceLine" id="cb1-102" title="102">geom_data &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/sf/topics/st_transform">st_transform</a></span>(geom_data, <span class="kw"><a href="https://www.rdocumentation.org/packages/sf/topics/st_crs">st_crs</a></span>(grid_data))</a>
+<a class="sourceLine" id="cb1-103" title="103"></a>
+<a class="sourceLine" id="cb1-104" title="104">breaks &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="dv">0</span>, <span class="dv">40</span>, <span class="dv">60</span>, <span class="dv">100</span>, <span class="dv">150</span>, <span class="dv">200</span>)</a>
+<a class="sourceLine" id="cb1-105" title="105"></a>
+<a class="sourceLine" id="cb1-106" title="106"><span class="kw"><a href="https://www.rdocumentation.org/packages/sf/topics/plot">plot</a></span>(grid_data[<span class="st">"grid_data"</span>], <span class="dt">border =</span> <span class="ot">NA</span>, <span class="dt">breaks =</span> breaks)</a></code></pre></div>
 <p><img src="intersectr_files/figure-html/demo-1.png" width="576"></p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1"></a>
 <a class="sourceLine" id="cb2-2" title="2"><span class="kw"><a href="https://www.rdocumentation.org/packages/sf/topics/plot">plot</a></span>(geom_data[<span class="st">"poly_data"</span>], <span class="dt">breaks =</span> breaks)</a></code></pre></div>
@@ -181,7 +221,7 @@
       <h2 class="hasAnchor">
 <a href="#tocnav" class="anchor"></a>Contents</h2>
       <ul class="nav nav-pills nav-stacked">
-<li><a href="#demo">Demo</a></li>
+<li><a href="#introduction-to-intersectr">Introduction to intersectr</a></li>
       </ul>
 </div>
       </div>

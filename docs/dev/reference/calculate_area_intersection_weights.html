@@ -33,10 +33,10 @@
 <meta property="og:title" content="Area Weighted Intersection — calculate_area_intersection_weights" />
 
 <meta property="og:description" content="Returns the fractional percent of each
-feature in y that is covered by each intersecting feature
-in x. These can be used as the weights in an area-weighted
-mean overlay analysis where y is the data source and area-
-weighted means are being generated for x." />
+feature in x that is covered by each intersecting feature
+in y. These can be used as the weights in an area-weighted
+mean overlay analysis where x is the data source and area-
+weighted means are being generated for y." />
 <meta name="twitter:card" content="summary" />
 
 <meta name="robots" content="noindex">
@@ -85,6 +85,18 @@ weighted means are being generated for x." />
 <li>
   <a href="../reference/index.html">Reference</a>
 </li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Articles
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+    <li>
+      <a href="../articles/prism_demo.html">Complete intersectr demo</a>
+    </li>
+  </ul>
+</li>
       </ul>
       
       <ul class="nav navbar-nav navbar-right">
@@ -114,10 +126,10 @@ weighted means are being generated for x." />
     <div class="ref-description">
     
     <p>Returns the fractional percent of each
-feature in y that is covered by each intersecting feature
-in x. These can be used as the weights in an area-weighted
-mean overlay analysis where y is the data source and area-
-weighted means are being generated for x.</p>
+feature in x that is covered by each intersecting feature
+in y. These can be used as the weights in an area-weighted
+mean overlay analysis where x is the data source and area-
+weighted means are being generated for y.</p>
     
     </div>
 
@@ -138,9 +150,10 @@ weighted means are being generated for x.</p>
     
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>data.frame containing fraction of each feature in y that is
-covered by each feature in x.
-s</p>
+    <p>data.frame containing fraction of each feature in x that is
+covered by each feature in y. e.g. If a feature from x is entirely within a feature in y,
+w will be 1. If a feature from x is 50<!-- % in one feature for y and 50% in another, there -->
+will be two rows, one for each x/y pair of features with w = 0.5 in each.</p>
     
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 

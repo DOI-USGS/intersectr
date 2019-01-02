@@ -18,60 +18,76 @@ knitr::opts_chunk$set(
 options(scipen = 9999)
 ```
 
-## Demo
+## Introduction to intersectr 
 
-This is a simple demo showing what intersectr can do. Derived from one of the tests for now. More later!
+This is a simple demo showing what intersectr can do. In this demonstration, local data is used. See other package articles for details.
 
 ```{r demo}
 library(intersectr)
 library(dplyr)
 library(sf)
+library(RNetCDF)
 
-variable_name <- "prcp"
+# Set an analysis projection to do intersection in.
+analysis_projection <- "+init=epsg:5070"
+
+# Use a sample file from the package.
 nc_file <- system.file("extdata/daymet.nc", package = "intersectr")
-nc <- RNetCDF::open.nc(nc_file)
-x_var <- "x"
-y_var <- "y"
-t_var <- "time"
+nc <- open.nc(nc_file)
 
-x <- RNetCDF::var.get.nc(nc, x_var) * 1000
-y <- RNetCDF::var.get.nc(nc, y_var) * 1000
+# Use a sample geometry from sf.
+geom <- sf::read_sf(system.file("shape/nc.shp", package = "sf")) %>%
+  st_transform(analysis_projection)
 
-geom <- sf::read_sf(system.file("shape/nc.shp", package = "sf"))
+# Look at what variables are available.
+(nc_var <- ncmeta::nc_vars(nc))
 
-grid_mapping <- get_grid_mapping(nc)
+# Choose a variable and get coordinate variables.
+variable_name <- "prcp"
+(nc_coord_vars <- ncmeta::nc_coord_var(nc, variable_name))
 
-in_prj <- ncdfgeom::get_prj(grid_mapping)
+# Pull out the coordinate variables and get them in projection units.
+meters_per_km <- 1000
+x <- var.get.nc(nc, nc_coord_vars$X) * meters_per_km
+y <- var.get.nc(nc, nc_coord_vars$Y) * meters_per_km
 
-cell_geometry <- suppressWarnings(
-  create_cell_geometry(x, y, in_prj, geom, 1000))
+# Create cell geometry for this geom
+cell_geometry <- create_cell_geometry(col_coords = x, 
+                                      row_coords = y, 
+                                      prj = ncdfgeom::get_prj(get_grid_mapping(nc)), 
+                                      geom = geom, 
+                                      buffer_dist = 1000)
 
+# Be explicit about the area intersection geometry and ids.
 data_source_cells <- st_sf(select(cell_geometry, grid_ids))
 target_polygons <- st_sf(select(geom, CNTY_ID))
+st_agr(data_source_cells) <- "constant"
+st_agr(target_polygons) <- "constant"
 
-sf::st_agr(data_source_cells) <- "constant"
-sf::st_agr(target_polygons) <- "constant"
+# Create the areal weights
+area_weights <- 
+  calculate_area_intersection_weights(data_source_cells, target_polygons)
 
-area_weights <- calculate_area_intersection_weights(
-  data_source_cells,
-  target_polygons)
+# Run the intersection
+intersected <- execute_intersection(nc_file = nc_file,
+                                    variable_name = variable_name,
+                                    intersection_weights = area_weights,
+                                    cell_geometry = cell_geometry,
+                                    x_var = nc_coord_vars$X, 
+                                    y_var = nc_coord_vars$Y, 
+                                    t_var = nc_coord_vars$T)
 
-intersected <- execute_intersection(nc_file,
-                                    variable_name,
-                                    area_weights,
-                                    cell_geometry,
-                                    x_var, y_var, t_var)
-
+# Get data ready to create plots.
 col_inds <- seq(min(cell_geometry$col_ind), max(cell_geometry$col_ind), 1)
 row_inds <- seq(min(cell_geometry$row_ind), max(cell_geometry$row_ind), 1)
 
 ids <- intersectr:::get_ids(length(col_inds), length(row_inds))
 
-grid_data <- RNetCDF::var.get.nc(nc, variable_name,
+grid_data <- var.get.nc(nc, variable_name,
                                  start = c(min(col_inds), min(row_inds), 3),
                                  count = c(length(col_inds), length(row_inds), 1))
 
-grid_data <- data.frame(grid_data = matrix(grid_data, # note t() here!!!
+grid_data <- data.frame(grid_data = matrix(grid_data,
                                            ncol = 1,
                                            byrow = TRUE),
                         grid_ids = matrix(ids, ncol = 1))

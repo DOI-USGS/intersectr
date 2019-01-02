@@ -1,12 +1,19 @@
 context("1d projected")
 
 test_that("1d projected", {
-  variable_name <- "prcp"
+  library(ncmeta)
   nc_file <- system.file("extdata/daymet.nc", package = "intersectr")
+
+  nc_var <- nc_vars(nc_file)
+  variable_name <- nc_var$name[1]
+
+  suppressWarnings(nc_coord_vars <- nc_coord_var(nc_file, variable_name))
+
+  x_var <- nc_coord_vars$X
+  y_var <- nc_coord_vars$Y
+  t_var <- nc_coord_vars$T
+
   nc <- RNetCDF::open.nc(nc_file)
-  x_var <- "x"
-  y_var <- "y"
-  t_var <- "time"
 
   x <- RNetCDF::var.get.nc(nc, x_var) * 1000
   y <- RNetCDF::var.get.nc(nc, y_var) * 1000

@@ -75,7 +75,7 @@ create_cell_geometry <- function(col_coords, row_coords, prj, geom = NULL, buffe
   dif_dist_x <- diff(col_coords)
   dif_dist_y <- diff(row_coords)
 
-  if (any(diff(dif_dist_x) > 1e-10) | any(diff(dif_dist_y) > 1e-10)) {
+  if (any(diff(dif_dist_x) > 1e-4) | any(diff(dif_dist_y) > 1e-4)) {
     stop("only regular rasters supported")
   } else {
     dif_dist_x <- mean(dif_dist_x)

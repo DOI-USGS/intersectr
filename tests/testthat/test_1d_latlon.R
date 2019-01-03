@@ -41,6 +41,10 @@ test_that("1d lat/lon", {
     data_source_cells,
     target_polygons)
 
+  area_weights_2 <- calculate_area_intersection_weights_2(
+    data_source_cells,
+    target_polygons)
+
   intersected <- execute_intersection(nc_file, variable_name, area_weights,
                                       cell_geometry, x_var, y_var, t_var)
 

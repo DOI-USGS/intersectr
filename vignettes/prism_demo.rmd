@@ -92,6 +92,16 @@ sf::st_agr(target_polygons) <- "constant"
 area_weights <- calculate_area_intersection_weights(
   data_source_cells,
   target_polygons)
+
+area_weights_2 <- calculate_area_intersection_weights_2(
+  data_source_cells,
+  target_polygons)
+
+target_polygons %>%
+  areal::aw_intersect(source = sf::st_transform(data_source_cells, sf::st_crs(target_polygons)), areaVar = "area") %>%
+  areal::aw_total(source = data_source_cells, id = "grid_ids", areaVar = "area", totalVar = "totalArea", type = "intensive", weight = "sum") %>%
+  areal::aw_weight(areaVar = "area", totalVar = "totalArea", areaWeight = "areaWeight") -> test
+
 ```
 
 Now we have everything we need to actually run the intersection. This function iterates through time steps, applying the intersection weights for each time step.

@@ -36,14 +36,14 @@
 #'
 #' sf::st_agr(a) <- sf::st_agr(b) <- "constant"
 #'
-#' a_b <- calculate_area_intersection_weights(a, b)
-#' b_a <- calculate_area_intersection_weights(b, a)
+#' a_b <- calculate_area_intersection_weights_2(a, b)
+#' b_a <- calculate_area_intersection_weights_2(b, a)
 #'
 #' @export
 #' @importFrom sf st_intersection st_set_geometry st_area st_crs
 #' @importFrom dplyr mutate group_by right_join select ungroup
 
-calculate_area_intersection_weights <- function(x, y) {
+calculate_area_intersection_weights_2 <- function(x, y) {
 
   if (st_crs(x) != st_crs(y)) {
     x <- st_transform(x, st_crs(y))

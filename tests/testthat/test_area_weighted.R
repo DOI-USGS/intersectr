@@ -21,8 +21,8 @@ test_that("area_intersection", {
 
   sf::st_agr(a) <- sf::st_agr(b) <- "constant"
 
-  a_b <- calculate_area_intersection_weights(a, b)
-  b_a <- calculate_area_intersection_weights(b, a)
+  a_b <- calculate_area_intersection_weights_2(a, b)
+  b_a <- calculate_area_intersection_weights_2(b, a)
 
   expect_equal(as.numeric(a_b[1, ]),
                c(1, 1, 1), info = "a1 is 100% covered by b1.")

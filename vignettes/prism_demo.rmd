@@ -85,7 +85,7 @@ The area weights function provides weights for area-weighted statistics. The wei
 
 ```{r area_weights}
 data_source_cells <- sf::st_sf(dplyr::select(cell_geometry, grid_ids))
-target_polygons <- sf::st_sf(dplyr::select(geom, CNTY_ID))
+target_polygons <- sf::st_sf(dplyr::select(geom, FIPS))
 sf::st_agr(data_source_cells) <- "constant"
 sf::st_agr(target_polygons) <- "constant"
 
@@ -96,6 +96,8 @@ area_weights <- calculate_area_intersection_weights(
 
 Now we have everything we need to actually run the intersection. This function iterates through time steps, applying the intersection weights for each time step.
 ```{r run_intersection}
+start_date <- "2010-01-01 00:00:00"
+end_date <- "2011-01-01 00:00:00"
 intersected <- execute_intersection(nc_file = nc_file,
                                     variable_name = variable_name,
                                     intersection_weights = area_weights,
@@ -103,19 +105,25 @@ intersected <- execute_intersection(nc_file = nc_file,
                                     x_var = nc_coord_vars$X,
                                     y_var = nc_coord_vars$Y,
                                     t_var = nc_coord_vars$T, 
-                                    start_datetime = "2010-01-01 00:00:00", 
-                                    end_datetime = "2015-01-01 00:00:00")
+                                    start_datetime = start_date, 
+                                    end_datetime = end_date)
+# Need to fix in execute_intersection
+intersected[, 2:ncol(intersected)] <- intersected[, 2:ncol(intersected)] / 100
+
+intersected_intersectr <- intersected
 ```
 
-Now we can plot up some of the resulting data on a mpa or through time.
+Now we can plot up some of the resulting data on a map or through time.
 ```{r plot_result}
-geom_data <- dplyr::select(geom, CNTY_ID) %>%
-  dplyr::left_join(data.frame(CNTY_ID = as.numeric(names(intersected)[2:ncol(intersected)]),
-                              poly_data = as.numeric(intersected[6, 2:ncol(intersected)]) / 100),
-                   by = "CNTY_ID")
+row <- which(as.character(intersected$time_stamp) == "2010-06-01")
+geom_data <- dplyr::select(geom, FIPS) %>%
+  dplyr::left_join(data.frame(FIPS = names(intersected)[2:ncol(intersected)],
+                              poly_data = as.numeric(intersected[row, 2:ncol(intersected)]),
+                              stringsAsFactors = FALSE),
+                   by = "FIPS")
 
 plot(geom_data["poly_data"],
-     main = paste(intersected[6, 1], "Prism Precip mm/month"))
+     main = paste(intersected[row, 1], "Prism Precip mm/month"))
 
 plot(intersected$time_stamp, seq(min(intersected[, 2:ncol(intersected)]), 
                                  max(intersected[, 2:ncol(intersected)]),
@@ -125,4 +133,101 @@ plot(intersected$time_stamp, seq(min(intersected[, 2:ncol(intersected)]),
 lines(intersected$time_stamp, apply(intersected[, 2:ncol(intersected)], 1, mean), lwd = 2, col = "grey")
 lines(intersected$time_stamp, apply(intersected[, 2:ncol(intersected)], 1, max), lwd = .5, col = "grey")
 lines(intersected$time_stamp, apply(intersected[, 2:ncol(intersected)], 1, min), lwd = .5, col = "grey")
+```
+
+```{r geoknife}
+library(geoknife)
+fabric <- webdata('prism')
+times(fabric) <- c(start_date, end_date)
+variables(fabric) <- "ppt"
+
+stencil <- webgeom(geom = "sample:Counties", attribute = "FIPS")
+values(stencil) <- geom$FIPS
+
+job <- geoknife(stencil, fabric, wait = TRUE)
+
+intersected <- result(job)
+intersected <- intersected[, 1:(ncol(intersected) - 2)]
+names(intersected)[1] <- "time_stamp"
+
+intersected_geoknife <- intersected
+```
+
+```{r plot_results_2} 
+row <- which(as.character(intersected$time_stamp) == "2010-06-01")
+geom_data <- dplyr::select(geom, FIPS) %>%
+  dplyr::left_join(data.frame(FIPS = names(intersected)[2:ncol(intersected)],
+                              poly_data = as.numeric(intersected[row, 2:ncol(intersected)]),
+                              stringsAsFactors = FALSE),
+                   by = "FIPS")
+
+plot(geom_data["poly_data"],
+     main = paste(intersected[row, 1], "Prism Precip mm/month"))
+
+plot(intersected$time_stamp, seq(min(intersected[, 2:ncol(intersected)]), 
+                                 max(intersected[, 2:ncol(intersected)]),
+                                 length.out = nrow(intersected)), col = NA, 
+     xlab = "Year", ylab = "PRISM Indicated Precip (mm/month)")
+
+lines(intersected$time_stamp, apply(intersected[, 2:ncol(intersected)], 1, mean), lwd = 2, col = "grey")
+lines(intersected$time_stamp, apply(intersected[, 2:ncol(intersected)], 1, max), lwd = .5, col = "grey")
+lines(intersected$time_stamp, apply(intersected[, 2:ncol(intersected)], 1, min), lwd = .5, col = "grey")
+```
+
+```{r plot}
+library(RNetCDF)
+library(dplyr)
+library(sf)
+col_inds <- seq(min(cell_geometry$col_ind), max(cell_geometry$col_ind), 1)
+row_inds <- seq(min(cell_geometry$row_ind), max(cell_geometry$row_ind), 1)
+
+ids <- intersectr:::get_ids(length(col_inds), length(row_inds))
+
+dates <- var.get.nc(nc, "time")
+date_units <- att.get.nc(nc, "time", "units")
+dates <- utcal.nc(date_units, dates, type = "c")
+date_ind <- which(as.character(dates) == "2010-06-01")
+
+grid_data <- var.get.nc(nc, variable_name,
+                        start = c(min(col_inds), min(row_inds), date_ind),
+                        count = c(length(col_inds), length(row_inds), 1)) / 100
+
+grid_data <- data.frame(grid_data = matrix(grid_data,
+                                           ncol = 1,
+                                           byrow = TRUE),
+                        grid_ids = matrix(ids, ncol = 1))
+
+grid_data$grid_data[grid_data$grid_data < 0] <- NA
+
+grid_data <- left_join(cell_geometry, grid_data, by = "grid_ids")
+
+intersected <- intersected_intersectr
+row <- which(as.character(intersected$time_stamp) == "2010-06-01")
+geom_data <- select(geom, FIPS) %>%
+  left_join(data.frame(FIPS = names(intersected)[2:ncol(intersected)],
+                       poly_data = as.numeric(intersected[row, 2:ncol(intersected)]), 
+                       stringsAsFactors = FALSE),
+            by = "FIPS")
+
+geom_data <- st_transform(geom_data, st_crs(grid_data))
+
+breaks <- c(0, 80, 120, 200, 300, 400)
+
+plot(grid_data["grid_data"], border = NA, breaks = breaks)
+
+plot(geom_data["poly_data"], breaks = breaks)
+
+plot(grid_data$geometry)
+
+plot(grid_data["grid_data"], border = NA, breaks = breaks, add = TRUE)
+
+plot(geom_data["poly_data"], breaks = breaks, add = TRUE)
+```
+
+```{r diff}
+row_gk <- which(as.character(intersected_geoknife$time_stamp) == "2010-06-01")
+row_ir <- which(as.character(intersected_intersectr$time_stamp) == "2010-06-01")
+
+intersected_intersectr[row_ir, 2:ncol(intersected_intersectr)] - 
+       intersected_geoknife[row_gk, 2:ncol(intersected_geoknife)]
 ```

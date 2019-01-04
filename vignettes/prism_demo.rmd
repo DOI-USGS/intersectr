@@ -53,14 +53,14 @@ The create_cell_geometry function generates an `sf` `data.frame` representing ea
 
 # Small diffs
 nc <- RNetCDF::open.nc(nc_file)
-col_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$X)
+col_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$X, unpack = TRUE)
 max(diff(diff(col_coords)))
 col_coords <- seq(from = col_coords[1],
                   to = col_coords[length(col_coords)],
                   along.with = col_coords)
 max(diff(diff(col_coords)))
 
-row_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$Y)
+row_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE)
 max(diff(diff(row_coords)))
 row_coords <- seq(from = row_coords[1],
                   to = row_coords[length(row_coords)],
@@ -108,7 +108,7 @@ intersected <- execute_intersection(nc_file = nc_file,
                                     start_datetime = start_date, 
                                     end_datetime = end_date)
 # Need to fix in execute_intersection
-intersected[, 2:ncol(intersected)] <- intersected[, 2:ncol(intersected)] / 100
+intersected[, 2:ncol(intersected)] <- intersected[, 2:ncol(intersected)]
 
 intersected_intersectr <- intersected
 ```
@@ -183,14 +183,15 @@ row_inds <- seq(min(cell_geometry$row_ind), max(cell_geometry$row_ind), 1)
 
 ids <- intersectr:::get_ids(length(col_inds), length(row_inds))
 
-dates <- var.get.nc(nc, "time")
+dates <- var.get.nc(nc, "time", unpack = TRUE)
 date_units <- att.get.nc(nc, "time", "units")
 dates <- utcal.nc(date_units, dates, type = "c")
 date_ind <- which(as.character(dates) == "2010-06-01")
 
 grid_data <- var.get.nc(nc, variable_name,
                         start = c(min(col_inds), min(row_inds), date_ind),
-                        count = c(length(col_inds), length(row_inds), 1)) / 100
+                        count = c(length(col_inds), length(row_inds), 1), 
+                        unpack = TRUE)
 
 grid_data <- data.frame(grid_data = matrix(grid_data,
                                            ncol = 1,
@@ -228,6 +229,7 @@ plot(geom_data["poly_data"], breaks = breaks, add = TRUE)
 row_gk <- which(as.character(intersected_geoknife$time_stamp) == "2010-06-01")
 row_ir <- which(as.character(intersected_intersectr$time_stamp) == "2010-06-01")
 
-intersected_intersectr[row_ir, 2:ncol(intersected_intersectr)] - 
-       intersected_geoknife[row_gk, 2:ncol(intersected_geoknife)]
+(intersected_intersectr[row_ir, 2:ncol(intersected_intersectr)] - 
+       intersected_geoknife[row_gk, 2:ncol(intersected_geoknife)]) / ((intersected_intersectr[row_ir, 2:ncol(intersected_intersectr)] + 
+       intersected_geoknife[row_gk, 2:ncol(intersected_geoknife)]) / 2)
 ```

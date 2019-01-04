@@ -48,13 +48,13 @@ variable_name <- "prcp"
 
 # Pull out the coordinate variables and get them in projection units.
 meters_per_km <- 1000
-x <- var.get.nc(nc, nc_coord_vars$X) * meters_per_km
-y <- var.get.nc(nc, nc_coord_vars$Y) * meters_per_km
+x <- var.get.nc(nc, nc_coord_vars$X, unpack = TRUE) * meters_per_km
+y <- var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE) * meters_per_km
 
 # Create cell geometry for this geom
 cell_geometry <- create_cell_geometry(col_coords = x, 
                                       row_coords = y, 
-                                      prj = ncdfgeom::get_prj(get_grid_mapping(nc)), 
+                                      prj = ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc)), 
                                       geom = geom, 
                                       buffer_dist = 1000)
 
@@ -85,7 +85,8 @@ ids <- intersectr:::get_ids(length(col_inds), length(row_inds))
 
 grid_data <- var.get.nc(nc, variable_name,
                                  start = c(min(col_inds), min(row_inds), 3),
-                                 count = c(length(col_inds), length(row_inds), 1))
+                                 count = c(length(col_inds), length(row_inds), 1), 
+                        unpack = TRUE)
 
 grid_data <- data.frame(grid_data = matrix(grid_data,
                                            ncol = 1,

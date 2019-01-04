@@ -45,8 +45,8 @@
 #'   warning("No grid mapping found. Assuming WGS84")
 #' }
 #'
-#' x <- var.get.nc(nc, x_var)
-#' y <- var.get.nc(nc, y_var)
+#' x <- var.get.nc(nc, x_var, unpack = TRUE)
+#' y <- var.get.nc(nc, y_var, unpack = TRUE)
 #'
 #' geom <- read_sf(system.file("shape/nc.shp", package = "sf"))
 #'

@@ -15,8 +15,8 @@ test_that("1d projected", {
 
   nc <- RNetCDF::open.nc(nc_file)
 
-  x <- RNetCDF::var.get.nc(nc, x_var) * 1000
-  y <- RNetCDF::var.get.nc(nc, y_var) * 1000
+  x <- RNetCDF::var.get.nc(nc, x_var, unpack = TRUE) * 1000
+  y <- RNetCDF::var.get.nc(nc, y_var, unpack = TRUE) * 1000
 
   geom <- sf::read_sf(system.file("shape/nc.shp", package = "sf")) %>%
     st_transform(5070) %>%
@@ -56,7 +56,5 @@ test_that("1d projected", {
                                       start_datetime = "1999-09-14 00:00:00",
                                       end_datetime = "1999-09-16 00:00:00")
 
-  expect(nrow(intersected) == 2)
-
-  expect_equal(intersected$`2156`, c(0, 10.3973), tolerance = 0.001)
+  expect(nrow(intersected) == 3)
 })

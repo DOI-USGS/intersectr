@@ -39,25 +39,22 @@ intersection weights for each time step.
 library(dplyr)
 library(sf)
 
-variable_name <- "precipitation_amount"
-x_var <- "lon"
-y_var <- "lat"
-t_var <- "day"
-
 nc_file <- system.file("extdata/metdata.nc", package = "intersectr")
 nc <- RNetCDF::open.nc(nc_file)
+ncmeta::nc_vars(nc)
+variable_name <- "precipitation_amount"
+cv <- ncmeta::nc_coord_var(nc, variable_name)
 
-x <- RNetCDF::var.get.nc(nc, x_var, unpack = TRUE)
-y <- RNetCDF::var.get.nc(nc, y_var, unpack = TRUE)
+x <- RNetCDF::var.get.nc(nc, cv$X, unpack = TRUE)
+y <- RNetCDF::var.get.nc(nc, cv$Y, unpack = TRUE)
 
-in_prj <- "+init=epsg:4326"
+prj <- ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc))
 out_prj <- "+init=epsg:5070"
 
 geom <- read_sf(system.file("shape/nc.shp", package = "sf")) \%>\%
-  st_transform(out_prj) \%>\%
-  st_buffer(0)
+  st_transform(out_prj)
 
-cell_geometry <- create_cell_geometry(x, y, in_prj, geom)
+cell_geometry <- create_cell_geometry(x, y, prj, geom, 0)
 
 data_source_cells <- st_sf(select(cell_geometry, grid_ids))
 target_polygons <- st_sf(select(geom, CNTY_ID))
@@ -70,40 +67,6 @@ area_weights <- calculate_area_intersection_weights(
   target_polygons)
 
 intersected <- execute_intersection(nc_file, variable_name, area_weights,
-                                    cell_geometry, x_var, y_var, t_var)
-
-col_inds <- seq(min(cell_geometry$col_ind), max(cell_geometry$col_ind), 1)
-row_inds <- seq(min(cell_geometry$row_ind), max(cell_geometry$row_ind), 1)
-
-ids <- intersectr:::get_ids(length(col_inds), length(row_inds))
-
-grid_data <- RNetCDF::var.get.nc(nc, variable_name,
-                                 start = c(min(col_inds), min(row_inds), 5),
-                                 count = c(length(col_inds), length(row_inds), 1))
-
-grid_data <- data.frame(grid_data = matrix(t(grid_data), # note t() here!!!
-                                           ncol = 1,
-                                           byrow = TRUE),
-                        grid_ids = matrix(ids, ncol = 1))
-
-grid_data$grid_data[grid_data$grid_data < 0] <- NA
-
-grid_data <- left_join(cell_geometry, grid_data, by = "grid_ids")
-
-geom_data <- select(geom, CNTY_ID) \%>\%
-  left_join(data.frame(CNTY_ID = as.numeric(names(intersected)[2:ncol(intersected)]),
-                       poly_data = as.numeric(intersected[5, 2:ncol(intersected)])), by = "CNTY_ID")
-
-geom_data <- st_transform(geom_data, st_crs(grid_data))
-
-breaks <- c(0, 0.5, 1, 2, 3, 5, 10)
-
-plot(grid_data$geometry)
-
-plot(grid_data["grid_data"], border = NA, breaks = breaks, add = TRUE)
-
-plot(geom_data["poly_data"], breaks = breaks, add = TRUE)
-
-plot(grid_data$geometry, lwd = 0.1, add = TRUE)
+                                    cell_geometry, cv$X, cv$Y, cv$T)
 
 }

@@ -3,17 +3,17 @@ title: "Complete intersectr demo"
 author: "dblodgett@usgs.gov"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{pkgdown}
+%\VignetteIndexEntry{pkgdown}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
----
-
-```{r setup, include = FALSE}
+  ---
+  
+  ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.width=6,
-  fig.height=4
+collapse = TRUE,
+comment = "#>",
+fig.width=6,
+fig.height=4
 )
 options(scipen = 9999)
 library(magrittr)
@@ -27,30 +27,26 @@ The example here uses a dataset from a THREDDS/OPeNDAP data server. Local NetCDF
 The [`ncmeta`](https://github.com/hypertidy/ncmeta/) package provides most of the NetCDF metadata handling and will work for either remote OPeNDAP hosted data or local NetCDF data. Below, we get a list of variables then find the coordinate variables for a selected variable.
 ```{r nc_setup}
 nc_file <- "https://cida.usgs.gov/thredds/dodsC/prism_v2"
-
 (nc_var <- ncmeta::nc_vars(nc_file))
-
 variable_name <- "ppt"
 (nc_coord_vars <- ncmeta::nc_coord_var(nc_file, variable_name))
-
 ```
 
 We'll use the sample polygon provided by the [`sf`](https://github.com/r-spatial/sf) package as our geometry. The EPSG:5070 projection is a reasonable equal area projection for work in the Conterminous US.
 ```{r geom}
 (geom <- sf::st_transform(sf::read_sf(system.file("shape/nc.shp",
-                                                 package = "sf")),
-                         "+init=epsg:5070"))
+                                                  package = "sf")),
+                          "+init=epsg:5070"))
 plot(sf::st_geometry(geom))
 ```
 
-Now we can create cell geometry for the grid we are going to intersect with our county geometry. A function from [`ncdfgeom`](https://usgs-r.github.io/ncdfgeom/dev/reference/get_prj.html) helps figure out the right proj4 string from our NetCDF file.
+  Now we can create cell geometry for the grid we are going to intersect with our county geometry. A function from [`ncmeta`](https://github.com/hypertidy/ncmeta/blob/master/R/nc-prj.R) helps figure out the right proj4 string from our NetCDF file.
 
 While very small, some of the row coordinates spacings are big enough to be interpreted as irregular in the create_cell_geometry function. We can even them out with a regular sequence. 
 
 The create_cell_geometry function generates an `sf` `data.frame` representing each cell from the dataset as a polygon with a unique id.
 ```{r cells}
-(nc_prj <- ncdfgeom::get_prj(intersectr::get_grid_mapping(nc_file)))
-
+(nc_prj <- ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc_file)))
 # Small diffs
 nc <- RNetCDF::open.nc(nc_file)
 col_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$X, unpack = TRUE)
@@ -59,21 +55,18 @@ col_coords <- seq(from = col_coords[1],
                   to = col_coords[length(col_coords)],
                   along.with = col_coords)
 max(diff(diff(col_coords)))
-
 row_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE)
 max(diff(diff(row_coords)))
 row_coords <- seq(from = row_coords[1],
                   to = row_coords[length(row_coords)],
                   along.with = row_coords)
 max(diff(diff(col_coords)))
-
 (cell_geometry <-
-  create_cell_geometry(col_coords = col_coords,
-                       row_coords = row_coords,
-                       prj = nc_prj,
-                       geom = geom, 
-                       buffer_dist = 10000))
-
+    create_cell_geometry(col_coords = col_coords,
+                         row_coords = row_coords,
+                         prj = nc_prj,
+                         geom = geom, 
+                         buffer_dist = 10000))
 plot(sf::st_geometry(sf::st_transform(cell_geometry, 
                                       sf::st_crs(geom))), lwd = 0.2)
 plot(sf::st_geometry(geom), add = TRUE)
@@ -88,7 +81,6 @@ data_source_cells <- sf::st_sf(dplyr::select(cell_geometry, grid_ids))
 target_polygons <- sf::st_sf(dplyr::select(geom, FIPS))
 sf::st_agr(data_source_cells) <- "constant"
 sf::st_agr(target_polygons) <- "constant"
-
 area_weights <- calculate_area_intersection_weights(
   data_source_cells,
   target_polygons)
@@ -109,7 +101,6 @@ intersected <- execute_intersection(nc_file = nc_file,
                                     end_datetime = end_date)
 # Need to fix in execute_intersection
 intersected[, 2:ncol(intersected)] <- intersected[, 2:ncol(intersected)]
-
 intersected_intersectr <- intersected
 ```
 
@@ -121,15 +112,12 @@ geom_data <- dplyr::select(geom, FIPS) %>%
                               poly_data = as.numeric(intersected[row, 2:ncol(intersected)]),
                               stringsAsFactors = FALSE),
                    by = "FIPS")
-
 plot(geom_data["poly_data"],
      main = paste(intersected[row, 1], "Prism Precip mm/month"))
-
 plot(intersected$time_stamp, seq(min(intersected[, 2:ncol(intersected)]), 
                                  max(intersected[, 2:ncol(intersected)]),
                                  length.out = nrow(intersected)), col = NA, 
      xlab = "Year", ylab = "PRISM Indicated Precip (mm/month)")
-
 lines(intersected$time_stamp, apply(intersected[, 2:ncol(intersected)], 1, mean), lwd = 2, col = "grey")
 lines(intersected$time_stamp, apply(intersected[, 2:ncol(intersected)], 1, max), lwd = .5, col = "grey")
 lines(intersected$time_stamp, apply(intersected[, 2:ncol(intersected)], 1, min), lwd = .5, col = "grey")
@@ -140,16 +128,12 @@ library(geoknife)
 fabric <- webdata('prism')
 times(fabric) <- c(start_date, end_date)
 variables(fabric) <- "ppt"
-
 stencil <- webgeom(geom = "sample:Counties", attribute = "FIPS")
 values(stencil) <- geom$FIPS
-
 job <- geoknife(stencil, fabric, wait = TRUE)
-
 intersected <- result(job)
 intersected <- intersected[, 1:(ncol(intersected) - 2)]
 names(intersected)[1] <- "time_stamp"
-
 intersected_geoknife <- intersected
 ```
 
@@ -160,76 +144,58 @@ geom_data <- dplyr::select(geom, FIPS) %>%
                               poly_data = as.numeric(intersected[row, 2:ncol(intersected)]),
                               stringsAsFactors = FALSE),
                    by = "FIPS")
-
 plot(geom_data["poly_data"],
      main = paste(intersected[row, 1], "Prism Precip mm/month"))
-
 plot(intersected$time_stamp, seq(min(intersected[, 2:ncol(intersected)]), 
                                  max(intersected[, 2:ncol(intersected)]),
                                  length.out = nrow(intersected)), col = NA, 
      xlab = "Year", ylab = "PRISM Indicated Precip (mm/month)")
-
 lines(intersected$time_stamp, apply(intersected[, 2:ncol(intersected)], 1, mean), lwd = 2, col = "grey")
 lines(intersected$time_stamp, apply(intersected[, 2:ncol(intersected)], 1, max), lwd = .5, col = "grey")
 lines(intersected$time_stamp, apply(intersected[, 2:ncol(intersected)], 1, min), lwd = .5, col = "grey")
 ```
 
 ```{r plot}
-library(RNetCDF)
-library(dplyr)
-library(sf)
 col_inds <- seq(min(cell_geometry$col_ind), max(cell_geometry$col_ind), 1)
 row_inds <- seq(min(cell_geometry$row_ind), max(cell_geometry$row_ind), 1)
-
 ids <- intersectr:::get_ids(length(col_inds), length(row_inds))
-
-dates <- var.get.nc(nc, "time", unpack = TRUE)
-date_units <- att.get.nc(nc, "time", "units")
-dates <- utcal.nc(date_units, dates, type = "c")
+dates <- RNetCDF::var.get.nc(nc, "time", unpack = TRUE)
+date_units <- RNetCDF::att.get.nc(nc, "time", "units")
+dates <- RNetCDF::utcal.nc(date_units, dates, type = "c")
 date_ind <- which(as.character(dates) == "2010-06-01")
-
-grid_data <- var.get.nc(nc, variable_name,
-                        start = c(min(col_inds), min(row_inds), date_ind),
-                        count = c(length(col_inds), length(row_inds), 1), 
-                        unpack = TRUE)
-
+grid_data <- RNetCDF::var.get.nc(nc, variable_name,
+                                 start = c(min(col_inds), min(row_inds), date_ind),
+                                 count = c(length(col_inds), length(row_inds), 1), 
+                                 unpack = TRUE)
 grid_data <- data.frame(grid_data = matrix(grid_data,
                                            ncol = 1,
                                            byrow = TRUE),
                         grid_ids = matrix(ids, ncol = 1))
-
 grid_data$grid_data[grid_data$grid_data < 0] <- NA
-
-grid_data <- left_join(cell_geometry, grid_data, by = "grid_ids")
-
+grid_data <- dplyr::left_join(cell_geometry, grid_data, by = "grid_ids")
 intersected <- intersected_intersectr
 row <- which(as.character(intersected$time_stamp) == "2010-06-01")
-geom_data <- select(geom, FIPS) %>%
-  left_join(data.frame(FIPS = names(intersected)[2:ncol(intersected)],
-                       poly_data = as.numeric(intersected[row, 2:ncol(intersected)]), 
-                       stringsAsFactors = FALSE),
-            by = "FIPS")
-
-geom_data <- st_transform(geom_data, st_crs(grid_data))
-
+geom_data <- dplyr::select(geom, FIPS) %>%
+  dplyr::left_join(data.frame(FIPS = names(intersected)[2:ncol(intersected)],
+                              poly_data = as.numeric(intersected[row, 2:ncol(intersected)]), 
+                              stringsAsFactors = FALSE),
+                   by = "FIPS")
+geom_data <- sf::st_transform(geom_data, sf::st_crs(grid_data))
 breaks <- c(0, 80, 120, 200, 300, 400)
-
 plot(grid_data["grid_data"], border = NA, breaks = breaks)
-
 plot(geom_data["poly_data"], breaks = breaks)
-
 plot(grid_data$geometry)
-
 plot(grid_data["grid_data"], border = NA, breaks = breaks, add = TRUE)
-
 plot(geom_data["poly_data"], breaks = breaks, add = TRUE)
 ```
 
 ```{r diff}
 row_gk <- which(as.character(intersected_geoknife$time_stamp) == "2010-06-01")
 row_ir <- which(as.character(intersected_intersectr$time_stamp) == "2010-06-01")
-
-(intersected_intersectr[row_ir, 2:ncol(intersected_intersectr)] - 
-       intersected_geoknife[row_gk, 2:ncol(intersected_geoknife)]) / ((intersected_intersectr[row_ir, 2:ncol(intersected_intersectr)] + 
-       intersected_geoknife[row_gk, 2:ncol(intersected_geoknife)]) / 2)
+diffs <- (intersected_intersectr[row_ir, 2:ncol(intersected_intersectr)] - 
+            intersected_geoknife[row_gk, 2:ncol(intersected_geoknife)]) / 
+  ((intersected_intersectr[row_ir, 2:ncol(intersected_intersectr)] + 
+      intersected_geoknife[row_gk, 2:ncol(intersected_geoknife)]) / 2)
+max(as.numeric(diffs[1,]))
+mean(as.numeric(diffs[1,]))
 ```

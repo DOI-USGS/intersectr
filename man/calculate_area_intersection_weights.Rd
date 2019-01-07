@@ -2,7 +2,7 @@
 % Please edit documentation in R/calculate_area_intersection_weights.R
 \name{calculate_area_intersection_weights}
 \alias{calculate_area_intersection_weights}
-\title{Area Weighted Intersection}
+\title{Area Weighted Intersection (areal implementation)}
 \usage{
 calculate_area_intersection_weights(x, y)
 }
@@ -22,10 +22,11 @@ Returns the fractional percent of each
 feature in x that is covered by each intersecting feature
 in y. These can be used as the weights in an area-weighted
 mean overlay analysis where x is the data source and area-
-weighted means are being generated for y.
-}
-\details{
-THIS WILL NOT WORK WITH SELF INTERSECTIONS!!!!!
+weighted means are being generated for the target, y.
+
+This function is a lightwieght wrapper around the functions
+\link[areal]{aw_intersect} \link[areal]{aw_total} and \link[areal]{aw_weight}
+from the \href{https://github.com/slu-openGIS/areal}{areal package}.
 }
 \examples{
 b1 = sf::st_polygon(list(rbind(c(-1,-1), c(1,-1),

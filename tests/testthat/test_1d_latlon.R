@@ -37,9 +37,9 @@ test_that("1d lat/lon", {
   sf::st_agr(data_source_cells) <- "constant"
   sf::st_agr(target_polygons) <- "constant"
 
-  area_weights <- calculate_area_intersection_weights(
+  expect_warning(area_weights <- calculate_area_intersection_weights(
     data_source_cells,
-    target_polygons)
+    target_polygons), "x is already of type POLYGON.")
 
   intersected <- execute_intersection(nc_file, variable_name, area_weights,
                                       cell_geometry, x_var, y_var, t_var)

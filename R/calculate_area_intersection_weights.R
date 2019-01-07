@@ -1,19 +1,22 @@
-#' Area Weighted Intersection
+#' Area Weighted Intersection (areal implementation)
 #' @description Returns the fractional percent of each
 #' feature in x that is covered by each intersecting feature
 #' in y. These can be used as the weights in an area-weighted
 #' mean overlay analysis where x is the data source and area-
-#' weighted means are being generated for y.
+#' weighted means are being generated for the target, y.
 #'
-#' @details
-#' THIS WILL NOT WORK WITH SELF INTERSECTIONS!!!!!
+#' This function is a lightwieght wrapper around the functions
+#' \link[areal]{aw_intersect} \link[areal]{aw_total} and \link[areal]{aw_weight}
+#' from the \href{https://github.com/slu-openGIS/areal}{areal package}.
 #'
 #' @param x sf data.frame including one geometry column and one identifier column
 #' @param y sf data.frame including one geometry column and one identifier column
+#'
 #' @return data.frame containing fraction of each feature in x that is
 #' covered by each feature in y. e.g. If a feature from x is entirely within a feature in y,
 #' w will be 1. If a feature from x is 50% in one feature for y and 50% in another, there
 #' will be two rows, one for each x/y pair of features with w = 0.5 in each.
+#'
 #' @examples
 #' b1 = sf::st_polygon(list(rbind(c(-1,-1), c(1,-1),
 #'                            c(1,1), c(-1,1),
@@ -53,31 +56,41 @@ calculate_area_intersection_weights <- function(x, y) {
   id_x <- names(x)[names(x) != attr(x, "sf_column")]
   id_y <- names(y)[names(y) != attr(y, "sf_column")]
 
+  # There is a bug in areal and this works around it.
+  geom_name_x <- attr(x, "sf_column")
+  attr(x, "sf_column") <- "geometry"
+  names(x)[which(names(x) == geom_name_x)] <- "geometry"
+
+  geom_name_y <- attr(y, "sf_column")
+  attr(y, "sf_column") <- "geometry"
+  names(y)[which(names(y) == geom_name_y)] <- "geometry"
+
   if (length(id_x) != 1 | length(id_y) != 1)
     stop("x and y must have one and only one non-geometry column")
 
   names(x)[names(x) == id_x] <- "varx"
   names(y)[names(y) == id_y] <- "vary"
 
-  # Get all parts and calculate their individual area
-  int <- st_intersection(x, y)
-  int <- mutate(int,
-                          part_area = as.numeric(st_area(int)))
-  int <- group_by(int, varx) # Allow sum parts over each x.
-  int <- st_set_geometry(int, NULL)
+  int <- areal::aw_intersect(y,
+                             source = x,
+                             areaVar = "area")
+  int <- areal::aw_total(int, source = x,
+                         id = "varx",
+                         areaVar = "area",
+                         totalVar = "totalArea",
+                         type = "extensive",
+                         weight = "total")
+  int <- areal::aw_weight(int, areaVar = "area",
+                          totalVar = "totalArea",
+                          areaWeight = "areaWeight")
 
-  # Get the area of x.
-  x_area <- st_set_geometry(mutate(x, x_area = as.numeric(st_area(x))), NULL)
+  int <- right_join(st_set_geometry(int, NULL), st_set_geometry(x, NULL), by = "varx")
 
-  # Join the intersecting area with the all the parts.
-  int <- right_join(int, x_area, by = "varx")
+  int <- select(int, varx, vary, w = areaWeight)
 
-  # Join total x area and calculate percent for each sum of intersecting y.
-  int <- mutate(int, w = part_area / x_area)
-  int <- select(int, varx, vary, w)
-  int <- ungroup(int)
+  names(int) <- c(id_x, id_y, "w")
 
-  out <- stats::setNames(int, c(id_x, id_y, "w"))
-
-  return(out)
+  return(dplyr::as_tibble(int))
 }
+
+varx <- vary <- w <- d <- poly_id <- areaWeight <- NULL

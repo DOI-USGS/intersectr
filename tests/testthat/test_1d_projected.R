@@ -22,9 +22,7 @@ test_that("1d projected", {
     st_transform(5070) %>%
     dplyr::filter(CNTY_ID == 2156)
 
-  grid_mapping <- get_grid_mapping(nc)
-
-  in_prj <- ncdfgeom::get_prj(grid_mapping)
+  in_prj <- ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc))
 
   cell_geometry <- suppressWarnings(
     create_cell_geometry(x, y, in_prj, geom, 1000))

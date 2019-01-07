@@ -26,41 +26,22 @@ Intersection is performed with cell centers then geometry is constructed.
 A buffer may be required to fully cover geometry with cells.
 }
 \examples{
-library(RNetCDF)
-library(sf)
+nc <- RNetCDF::open.nc(system.file("extdata/metdata.nc", package = "intersectr"))
+ncmeta::nc_vars(nc)
 variable_name <- "precipitation_amount"
-nc <- open.nc(system.file("extdata/metdata.nc", package = "intersectr"))
-nc_file <- file.inq.nc(nc)
-nc_dim <- lapply(seq(0, nc_file$ndims-1), function(d) dim.inq.nc(nc, d))
-nc_var <- lapply(seq(0, nc_file$nvars-1), function(v) var.inq.nc(nc, v))
-var_names <- sapply(nc_var, function(v) v$name)
-print(var_names)
-var <- which(var_names == variable_name)
-var_atts <- lapply(seq(0, nc_var[[var]]$natts - 1), function(a) att.inq.nc(nc, var - 1, a))
-var_att_names <- sapply(var_atts, function(a) a$name)
-coordinates <- att.get.nc(nc, var - 1, which(var_att_names == "coordinates") - 1)
-print(coordinates)
-# Could iomplement general handling for this... hand set for now.
-# Either use coordinate variables or standard names for auxiliary coordinate variables.
-x_var <- "lon"
-y_var <- "lat"
+cv <- ncmeta::nc_coord_var(nc, variable_name)
 
+x <- RNetCDF::var.get.nc(nc, cv$X, unpack = TRUE)
+y <- RNetCDF::var.get.nc(nc, cv$Y, unpack = TRUE)
 
-if (!is.null(grid_mapping)) {
-  prj <- ncdfgeom::get_prj(grid_mapping)
-} else {
-  prj <- "+init=epsg:4326"
-  warning("No grid mapping found. Assuming WGS84")
-}
+prj <- ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc))
 
-x <- var.get.nc(nc, x_var, unpack = TRUE)
-y <- var.get.nc(nc, y_var, unpack = TRUE)
-
-geom <- read_sf(system.file("shape/nc.shp", package = "sf"))
+geom <- sf::read_sf(system.file("shape/nc.shp", package = "sf"))
+geom <- sf::st_transform(geom, 5070)
 
 cell_geometry <- create_cell_geometry(x, y, prj, geom, 0)
 
-plot(cell_geometry$geometry, lwd = 0.25)
-plot(st_transform(geom$geometry, prj), add = TRUE)
+plot(sf::st_geometry(cell_geometry), lwd = 0.25)
+plot(sf::st_transform(sf::st_geometry(geom), prj), add = TRUE)
 
 }

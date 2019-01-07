@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Area Weighted Intersection — calculate_area_intersection_weights • intersectr</title>
+<title>Area Weighted Intersection (areal implementation) — calculate_area_intersection_weights • intersectr</title>
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -30,13 +30,16 @@
 
 
 
-<meta property="og:title" content="Area Weighted Intersection — calculate_area_intersection_weights" />
+<meta property="og:title" content="Area Weighted Intersection (areal implementation) — calculate_area_intersection_weights" />
 
 <meta property="og:description" content="Returns the fractional percent of each
 feature in x that is covered by each intersecting feature
 in y. These can be used as the weights in an area-weighted
 mean overlay analysis where x is the data source and area-
-weighted means are being generated for y." />
+weighted means are being generated for the target, y.
+This function is a lightwieght wrapper around the functions
+aw_intersect aw_total and aw_weight
+from the areal package." />
 <meta name="twitter:card" content="summary" />
 
 <meta name="robots" content="noindex">
@@ -93,7 +96,7 @@ weighted means are being generated for y." />
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/prism_demo.html">Complete intersectr demo</a>
+      <a href="../articles/prism_demo.html">UNKNOWN TITLE</a>
     </li>
   </ul>
 </li>
@@ -118,7 +121,7 @@ weighted means are being generated for y." />
 <div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
-    <h1>Area Weighted Intersection</h1>
+    <h1>Area Weighted Intersection (areal implementation)</h1>
     <small class="dont-index">Source: <a href='https://github.com/dblodgett-usgs/intersectr/blob/master/R/calculate_area_intersection_weights.R'><code>R/calculate_area_intersection_weights.R</code></a></small>
     <div class="hidden name"><code>calculate_area_intersection_weights.Rd</code></div>
     </div>
@@ -129,7 +132,10 @@ weighted means are being generated for y." />
 feature in x that is covered by each intersecting feature
 in y. These can be used as the weights in an area-weighted
 mean overlay analysis where x is the data source and area-
-weighted means are being generated for y.</p>
+weighted means are being generated for the target, y.</p>
+<p>This function is a lightwieght wrapper around the functions
+<a href='https://www.rdocumentation.org/packages/areal/topics/aw_intersect'>aw_intersect</a> <a href='https://www.rdocumentation.org/packages/areal/topics/aw_total'>aw_total</a> and <a href='https://www.rdocumentation.org/packages/areal/topics/aw_weight'>aw_weight</a>
+from the <a href='https://github.com/slu-openGIS/areal'>areal package</a>.</p>
     
     </div>
 
@@ -155,10 +161,6 @@ covered by each feature in y. e.g. If a feature from x is entirely within a feat
 w will be 1. If a feature from x is 50<!-- % in one feature for y and 50% in another, there -->
 will be two rows, one for each x/y pair of features with w = 0.5 in each.</p>
     
-    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
-
-    <p>THIS WILL NOT WORK WITH SELF INTERSECTIONS!!!!!</p>
-    
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='no'>b1</span> <span class='kw'>=</span> <span class='kw pkg'>sf</span><span class='kw ns'>::</span><span class='fu'><a href='https://www.rdocumentation.org/packages/sf/topics/st'>st_polygon</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/list'>list</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/cbind'>rbind</a></span>(<span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(-<span class='fl'>1</span>,-<span class='fl'>1</span>), <span class='fu'><a href='https://www.rdocumentation.org/packages/base/topics/c'>c</a></span>(<span class='fl'>1</span>,-<span class='fl'>1</span>),
@@ -180,8 +182,8 @@ will be two rows, one for each x/y pair of features with w = 0.5 in each.</p>
 
 <span class='kw pkg'>sf</span><span class='kw ns'>::</span><span class='fu'><a href='https://www.rdocumentation.org/packages/sf/topics/st_agr'>st_agr</a></span>(<span class='no'>a</span>) <span class='kw'>&lt;-</span> <span class='kw pkg'>sf</span><span class='kw ns'>::</span><span class='fu'><a href='https://www.rdocumentation.org/packages/sf/topics/st_agr'>st_agr</a></span>(<span class='no'>b</span>) <span class='kw'>&lt;-</span> <span class='st'>"constant"</span>
 
-<span class='no'>a_b</span> <span class='kw'>&lt;-</span> <span class='fu'>calculate_area_intersection_weights</span>(<span class='no'>a</span>, <span class='no'>b</span>)
-<span class='no'>b_a</span> <span class='kw'>&lt;-</span> <span class='fu'>calculate_area_intersection_weights</span>(<span class='no'>b</span>, <span class='no'>a</span>)</div></pre>
+<span class='no'>a_b</span> <span class='kw'>&lt;-</span> <span class='fu'>calculate_area_intersection_weights</span>(<span class='no'>a</span>, <span class='no'>b</span>)</div><div class='output co'>#&gt; <span class='warning'>Warning: x is already of type POLYGON.</span></div><div class='input'><span class='no'>b_a</span> <span class='kw'>&lt;-</span> <span class='fu'>calculate_area_intersection_weights</span>(<span class='no'>b</span>, <span class='no'>a</span>)</div><div class='output co'>#&gt; <span class='warning'>Warning: x is already of type POLYGON.</span></div><div class='input'>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
@@ -189,8 +191,6 @@ will be two rows, one for each x/y pair of features with w = 0.5 in each.</p>
       <li><a href="#arguments">Arguments</a></li>
       
       <li><a href="#value">Value</a></li>
-
-      <li><a href="#details">Details</a></li>
       
       <li><a href="#examples">Examples</a></li>
     </ul>

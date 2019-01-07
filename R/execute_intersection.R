@@ -31,8 +31,8 @@
 #' nc_file <- system.file("extdata/metdata.nc", package = "intersectr")
 #' nc <- RNetCDF::open.nc(nc_file)
 #'
-#' x <- RNetCDF::var.get.nc(nc, x_var)
-#' y <- RNetCDF::var.get.nc(nc, y_var)
+#' x <- RNetCDF::var.get.nc(nc, x_var, unpack = TRUE)
+#' y <- RNetCDF::var.get.nc(nc, y_var, unpack = TRUE)
 #'
 #' in_prj <- "+init=epsg:4326"
 #' out_prj <- "+init=epsg:5070"
@@ -113,7 +113,8 @@ execute_intersection <- function(nc_file,
     stop("only 1d coordinate variables supported")
 
   time_steps <- utcal.nc(att.get.nc(nc, t_var_info$name, "units"),
-                         var.get.nc(nc, t_var_info$name), "c")
+                         var.get.nc(nc, t_var_info$name, unpack = TRUE),
+                         "c")
   time_steps <- data.frame(time_stamp = time_steps)
 
   col_inds <- seq(min(cell_geometry$col_ind), max(cell_geometry$col_ind), 1)
@@ -132,11 +133,11 @@ execute_intersection <- function(nc_file,
     if (is.null(start_datetime)) start_datetime <- time_steps[1]
     if (is.character(start_datetime)) {
       start_datetime <- strptime(start_datetime,
-                                 format = "%Y-%m-%d %H:%M:%S")
+                                 format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
     }
     if (is.character(end_datetime)) {
       end_datetime <- strptime(end_datetime,
-                               format = "%Y-%m-%d %H:%M:%S")
+                               format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
     }
 
     t_inds <- time_steps$time_stamp >= start_datetime &
@@ -161,9 +162,10 @@ execute_intersection <- function(nc_file,
       try_backoff({
         i_data <- var.get.nc(nc, variable_name,
                              start = c(min(col_inds),
-                                       min(row_inds), i)[dimid_order],
+                                       min(row_inds), t_inds[i])[dimid_order],
                              count = c(length(col_inds),
-                                       length(row_inds), 1)[dimid_order])
+                                       length(row_inds), 1)[dimid_order],
+                             unpack = TRUE)
 
         i_data <- data.frame(d = matrix(i_data,
                                         ncol = 1,

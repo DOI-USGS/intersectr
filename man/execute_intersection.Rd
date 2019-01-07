@@ -47,8 +47,8 @@ t_var <- "day"
 nc_file <- system.file("extdata/metdata.nc", package = "intersectr")
 nc <- RNetCDF::open.nc(nc_file)
 
-x <- RNetCDF::var.get.nc(nc, x_var)
-y <- RNetCDF::var.get.nc(nc, y_var)
+x <- RNetCDF::var.get.nc(nc, x_var, unpack = TRUE)
+y <- RNetCDF::var.get.nc(nc, y_var, unpack = TRUE)
 
 in_prj <- "+init=epsg:4326"
 out_prj <- "+init=epsg:5070"

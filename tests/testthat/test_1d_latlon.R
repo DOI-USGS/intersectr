@@ -15,8 +15,8 @@ test_that("1d lat/lon", {
 
   nc <- RNetCDF::open.nc(nc_file)
 
-  x <- RNetCDF::var.get.nc(nc, x_var)
-  y <- RNetCDF::var.get.nc(nc, y_var)
+  x <- RNetCDF::var.get.nc(nc, x_var, unpack = TRUE)
+  y <- RNetCDF::var.get.nc(nc, y_var, unpack = TRUE)
 
   geom <- sf::read_sf(system.file("shape/nc.shp", package = "sf")) %>%
     st_transform(5070)
@@ -52,7 +52,5 @@ test_that("1d lat/lon", {
                                       start_datetime = "2018-09-13 00:00:00",
                                       end_datetime = "2018-09-14 00:00:00")
 
-  expect(nrow(intersected) == 1)
-
-  expect_equal(intersected$`1832`, 0.0172, tolerance = 0.01)
+  expect(nrow(intersected) == 2)
 })

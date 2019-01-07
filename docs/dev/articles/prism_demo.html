@@ -5,11 +5,11 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title> • intersectr</title>
+<title>Complete intersectr demo • intersectr</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha256-916EbMg70RQy9LHiGkXzG8hSg9EdNy97GazNG/aiY1w=" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script><!-- sticky kit --><script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="">
+<script src="../pkgdown.js"></script><meta property="og:title" content="Complete intersectr demo">
 <meta property="og:description" content="">
 <meta name="twitter:card" content="summary">
 <meta name="robots" content="noindex">
@@ -57,7 +57,7 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="../articles/prism_demo.html">UNKNOWN TITLE</a>
+      <a href="../articles/prism_demo.html">Complete intersectr demo</a>
     </li>
   </ul>
 </li>
@@ -81,7 +81,8 @@
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1></h1>
+      <h1>Complete intersectr demo</h1>
+                        <h4 class="author"><a href="mailto:dblodgett@usgs.gov" class="email">dblodgett@usgs.gov</a></h4>
             
       
       <small class="dont-index">Source: <a href="https://github.com/dblodgett-usgs/intersectr/blob/master/vignettes/prism_demo.rmd"><code>vignettes/prism_demo.rmd</code></a></small>
@@ -91,30 +92,6 @@
 
     
     
-<table class="table"><tbody>
-<tr class="odd">
-<td>title: “Complete intersectr demo”</td>
-</tr>
-<tr class="even">
-<td>author: "<a href="mailto:dblodgett@usgs.gov%22" class="email">dblodgett@usgs.gov"</a>
-</td>
-</tr>
-<tr class="odd">
-<td>output: rmarkdown::html_vignette</td>
-</tr>
-<tr class="even">
-<td>vignette: &gt;</td>
-</tr>
-<tr class="odd">
-<td>%</td>
-</tr>
-<tr class="even">
-<td>%</td>
-</tr>
-<tr class="odd">
-<td>%</td>
-</tr>
-</tbody></table>
 <p>This is a complete demo showing a workflow implemented with <a href="https://github.com/dblodgett-usgs/intersectr"><code>intersectr</code></a>. One of the primary goals of the package is to intersect gridded time series data with polygon geometries. For example, and as shown below, we can get time-series of area-weighed average monthly precipitation for counties in North Carolina from the PRISM source dataset that has a 4km - monthly resolution.</p>
 <p>The example here uses a dataset from a THREDDS/OPeNDAP data server. Local NetCDF files can also be used but may require special handling if files are broken up through time.</p>
 <p>The <a href="https://github.com/hypertidy/ncmeta/"><code>ncmeta</code></a> package provides most of the NetCDF metadata handling and will work for either remote OPeNDAP hosted data or local NetCDF data. Below, we get a list of variables then find the coordinate variables for a selected variable.</p>

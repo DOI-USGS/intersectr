@@ -3,12 +3,12 @@ title: "Complete intersectr demo"
 author: "dblodgett@usgs.gov"
 output: rmarkdown::html_vignette
 vignette: >
-%\VignetteIndexEntry{pkgdown}
+  %\VignetteIndexEntry{pkgdown}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-  ---
+---
   
-  ```{r setup, include = FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(
 collapse = TRUE,
 comment = "#>",

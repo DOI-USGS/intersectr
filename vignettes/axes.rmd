@@ -1,5 +1,5 @@
 ---
-title: "Complete intersectr demo"
+title: "Axes and intersectr"
 author: "dblodgett@usgs.gov"
 output: rmarkdown::html_vignette
 vignette: >
@@ -36,10 +36,13 @@ To describe the workflow, it's useful to first describe the various information 
 3) Simple-Features Target Polygons
   The output of the intersectr workflow is a timeseries for each polygon in the target polygons for each variable desired from the source data. The target polygons are used to determine the subset of data required and as an input to the function to generate area-weights for intersecting cells and polygons. Once the subset and weights have been determined, the actual polygons are no longer needed. A nuance worth mentioning is that the projection of the taret polygons is not necessarily the same as the NetCDF coordinates. All the processing needs to be flexible to projection to suit user needs.
   
+4) R-array container for source data.
+  These data are always in-memory, but are critical to the workflow of intersectr. The convention implemented in intersectr maps the X axis of the NetCDF source data onto R-array columns and the Y axis onto rows. Usually this requires no modification from the source data's axis order, but in any case other than XYT axis order, the array returned from a var-get request is rearanged into the canonical order to ensure data is transformed apropriately. 
+  
 ## Workflow Steps
 
 1) Create Cell Geometry
-  This step takes the source coordinate data and target polygons and returns a simple-features table containing cell geometry with an ID and indices for X and Y axes. The returned geometry is useful for spatial processing and visualization. Assuming the logic for assigning IDs to an array is known, the IDs are useful for rapidly joining a given time-step spatial array to the area intersection weights in execute intersection. The X and Y axis indices are used to determine the subset index positions of source data required.
+  This step takes the source coordinate data and target polygons and returns a simple-features table containing cell geometry with an ID for cells of an XY R-array and indices for X and Y axes of the NetCDF source. The returned geometry is useful for spatial processing and visualization. Assuming the logic for assigning IDs to an R-array is known, the IDs are useful for rapidly joining a given time-step spatial array to the area intersection weights in execute intersection. The X and Y axis indices are used to determine the subset index positions of source data required.
   
 2) Calculate Area Intersection Weights
   As axes are concerned, this step is not very impactful. It takes two sets of geometry, a data source and target set, and returns a table of weights that can be used to generate area-weighted summaries of the source attributed to the target.  
@@ -55,6 +58,11 @@ To describe the workflow, it's useful to first describe the various information 
   Given that spatio-temporal subsetting and processing is required. Understanding how NetCDF axes relate to canonical spatio-temporal axes is critical. The create cell geometry step maps NetCDF axes onto spatio-temporal axes and creates a table of cell geometry with the mapping between the two in its attributes.
 
 3) Cell geometry ID
-  This ID is different from the other axes, but is worth describing in this context. A single function is used to assign IDs to the cell geometry and get joining IDs for the array of source data. The ID allows the 2d (XY) array to be reliably and repeatably joined to the cell geometry.
+  This ID is different from the other axes, but is worth describing in this context. A single function is used to assign IDs to the cell geometry and get joining IDs for the R-array that contains source data. The ID allows the 2d (XY) array to be reliably and repeatably joined to the cell geometry using a shared identifier.
+  
+## Summary
+This article has described various aspects of the data used in the `intersectr` workflow. Conceptually, there are four sets of axes involved: native NetCDF source axes, canonical spatiotemporal axes, R-array axes, and a cell geometry ID axis. While the NetCDF source axes will almost always follow the canonical order, it is not gaurunteed. R-array axes as implemented in `intersectr` uses the canonical columns by rows are X by Y. A single function is used to generate a linear ID axis for the R-array axes ensuring that the join-by ID is used consistently. 
+
+In writing this article, additional testing and some improvements were implemented in `intersectr`. A future version of the article will have in-line code highlighting some of the details described. Please open issues on the `intersectr` repository with questions or ideas to improve it.
   
 

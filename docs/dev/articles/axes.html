@@ -5,11 +5,11 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Complete intersectr demo • intersectr</title>
+<title>Axes and intersectr • intersectr</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha256-916EbMg70RQy9LHiGkXzG8hSg9EdNy97GazNG/aiY1w=" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha256-FiZwavyI2V6+EXO1U+xzLG3IKldpiTFf3153ea9zikQ=" crossorigin="anonymous"></script><!-- sticky kit --><script src="https://cdnjs.cloudflare.com/ajax/libs/sticky-kit/1.1.3/sticky-kit.min.js" integrity="sha256-c4Rlo1ZozqTPE2RLuvbusY3+SU1pQaJC0TjuhygMipw=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="Complete intersectr demo">
+<script src="../pkgdown.js"></script><meta property="og:title" content="Axes and intersectr">
 <meta property="og:description" content="">
 <meta name="twitter:card" content="summary">
 <meta name="robots" content="noindex">
@@ -57,7 +57,7 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="../articles/axes.html">Complete intersectr demo</a>
+      <a href="../articles/axes.html">Axes and intersectr</a>
     </li>
     <li>
       <a href="../articles/prism_demo.html">Complete intersectr demo</a>
@@ -84,7 +84,7 @@
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1>Complete intersectr demo</h1>
+      <h1>Axes and intersectr</h1>
                         <h4 class="author"><a href="mailto:dblodgett@usgs.gov" class="email">dblodgett@usgs.gov</a></h4>
             
       
@@ -106,13 +106,14 @@
 <ol start="2" style="list-style-type: decimal">
 <li><p>NetCDF Source Coordinate Data Coordinate data are typically 1d vectors that provide the spatio-temporal coordinates for an entire X, Y, or T axes of source data. In some cases, spatial coordinates are a 2d curvilinear grid of coordinate pairs. Temporal coordinates can also be 2d, representing both the time a model ran and the time coordinate of the model prediction itself. Leading the discussion below a bit, these spatio-temporal coordinates are what we use to determine what subset of the source data we need but the actual data requests are made using the underlying NetCDF axes in the order of a given data variable!</p></li>
 <li><p>Simple-Features Target Polygons The output of the intersectr workflow is a timeseries for each polygon in the target polygons for each variable desired from the source data. The target polygons are used to determine the subset of data required and as an input to the function to generate area-weights for intersecting cells and polygons. Once the subset and weights have been determined, the actual polygons are no longer needed. A nuance worth mentioning is that the projection of the taret polygons is not necessarily the same as the NetCDF coordinates. All the processing needs to be flexible to projection to suit user needs.</p></li>
+<li><p>R-array container for source data. These data are always in-memory, but are critical to the workflow of intersectr. The convention implemented in intersectr maps the X axis of the NetCDF source data onto R-array columns and the Y axis onto rows. Usually this requires no modification from the source data’s axis order, but in any case other than XYT axis order, the array returned from a var-get request is rearanged into the canonical order to ensure data is transformed apropriately.</p></li>
 </ol>
 </div>
 <div id="workflow-steps" class="section level2">
 <h2 class="hasAnchor">
 <a href="#workflow-steps" class="anchor"></a>Workflow Steps</h2>
 <ol style="list-style-type: decimal">
-<li><p>Create Cell Geometry This step takes the source coordinate data and target polygons and returns a simple-features table containing cell geometry with an ID and indices for X and Y axes. The returned geometry is useful for spatial processing and visualization. Assuming the logic for assigning IDs to an array is known, the IDs are useful for rapidly joining a given time-step spatial array to the area intersection weights in execute intersection. The X and Y axis indices are used to determine the subset index positions of source data required.</p></li>
+<li><p>Create Cell Geometry This step takes the source coordinate data and target polygons and returns a simple-features table containing cell geometry with an ID for cells of an XY R-array and indices for X and Y axes of the NetCDF source. The returned geometry is useful for spatial processing and visualization. Assuming the logic for assigning IDs to an R-array is known, the IDs are useful for rapidly joining a given time-step spatial array to the area intersection weights in execute intersection. The X and Y axis indices are used to determine the subset index positions of source data required.</p></li>
 <li><p>Calculate Area Intersection Weights As axes are concerned, this step is not very impactful. It takes two sets of geometry, a data source and target set, and returns a table of weights that can be used to generate area-weighted summaries of the source attributed to the target.</p></li>
 <li><p>Execute Intersection The execute intersection step requests source data iteratively, applying the area intersection weights as it traverses a potentially massive dataset. As described above, it requires inputs that provide the subset of NetCDF source described in terms of the NetCDF data’s axes. The critical sub-step of execute intersection is requesting a timestep worth of source data. The request must be made in the axis order of the source data variable and the response data appropriately identified and joined to the weight table.</p></li>
 </ol>
@@ -123,8 +124,14 @@
 <ol style="list-style-type: decimal">
 <li><p>NetCDF Source Data As discussed above, the NetCDF source data axes are always along identified NetCDF dimensions which are shared with coordinate variables, but the order of the axes can be different depending how a NetCDF source was written.</p></li>
 <li><p>Spatio-temporal XYT Given that spatio-temporal subsetting and processing is required. Understanding how NetCDF axes relate to canonical spatio-temporal axes is critical. The create cell geometry step maps NetCDF axes onto spatio-temporal axes and creates a table of cell geometry with the mapping between the two in its attributes.</p></li>
-<li><p>Cell geometry ID This ID is different from the other axes, but is worth describing in this context. A single function is used to assign IDs to the cell geometry and get joining IDs for the array of source data. The ID allows the 2d (XY) array to be reliably and repeatably joined to the cell geometry.</p></li>
+<li><p>Cell geometry ID This ID is different from the other axes, but is worth describing in this context. A single function is used to assign IDs to the cell geometry and get joining IDs for the R-array that contains source data. The ID allows the 2d (XY) array to be reliably and repeatably joined to the cell geometry using a shared identifier.</p></li>
 </ol>
+</div>
+<div id="summary" class="section level2">
+<h2 class="hasAnchor">
+<a href="#summary" class="anchor"></a>Summary</h2>
+<p>This article has described various aspects of the data used in the <code>intersectr</code> workflow. Conceptually, there are four sets of axes involved: native NetCDF source axes, canonical spatiotemporal axes, R-array axes, and a cell geometry ID axis. While the NetCDF source axes will almost always follow the canonical order, it is not gaurunteed. R-array axes as implemented in <code>intersectr</code> uses the canonical columns by rows are X by Y. A single function is used to generate a linear ID axis for the R-array axes ensuring that the join-by ID is used consistently.</p>
+<p>In writing this article, additional testing and some improvements were implemented in <code>intersectr</code>. A future version of the article will have in-line code highlighting some of the details described. Please open issues on the <code>intersectr</code> repository with questions or ideas to improve it.</p>
 </div>
 </div>
   </div>
@@ -139,6 +146,7 @@
 <li><a href="#workflow-artifacts">Workflow Artifacts</a></li>
       <li><a href="#workflow-steps">Workflow Steps</a></li>
       <li><a href="#workflow-axes-summary">Workflow Axes Summary</a></li>
+      <li><a href="#summary">Summary</a></li>
       </ul>
 </li>
       </ul>

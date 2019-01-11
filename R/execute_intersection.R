@@ -18,40 +18,33 @@
 #' @importFrom dplyr right_join mutate summarise group_by ungroup
 #' @importFrom RNetCDF open.nc dim.inq.nc var.inq.nc att.get.nc var.get.nc utcal.nc
 #' @export
+#'
 #' @examples
-#'
-#' library(dplyr)
-#' library(sf)
-#'
 #' nc_file <- system.file("extdata/metdata.nc", package = "intersectr")
 #' nc <- RNetCDF::open.nc(nc_file)
-#' ncmeta::nc_vars(nc)
+#'
 #' variable_name <- "precipitation_amount"
-#' cv <- ncmeta::nc_coord_var(nc, variable_name)
+#' (cv <- ncmeta::nc_coord_var(nc, variable_name))
 #'
-#' x <- RNetCDF::var.get.nc(nc, cv$X, unpack = TRUE)
-#' y <- RNetCDF::var.get.nc(nc, cv$Y, unpack = TRUE)
+#' geom <- sf::read_sf(system.file("shape/nc.shp", package = "sf"))[20, ]
+#' geom <- sf::st_transform(geom, "+init=epsg:5070")
 #'
-#' prj <- ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc))
-#' out_prj <- "+init=epsg:5070"
+#' cell_geometry <-
+#'   create_cell_geometry(X_coords = RNetCDF::var.get.nc(nc, cv$X, unpack = TRUE),
+#'                        Y_coords = RNetCDF::var.get.nc(nc, cv$Y, unpack = TRUE),
+#'                        prj = ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc)),
+#'                        geom = geom,
+#'                        buffer_dist = 2000)
 #'
-#' geom <- read_sf(system.file("shape/nc.shp", package = "sf")) %>%
-#'   st_transform(out_prj)
-#'
-#' cell_geometry <- create_cell_geometry(x, y, prj, geom, 0)
-#'
-#' data_source_cells <- st_sf(select(cell_geometry, grid_ids))
-#' target_polygons <- st_sf(select(geom, CNTY_ID))
-#'
-#' st_agr(data_source_cells) <- "constant"
-#' st_agr(target_polygons) <- "constant"
+#' plot(sf::st_transform(sf::st_geometry(cell_geometry), "+init=epsg:5070"))
+#' plot(sf::st_geometry(geom), add = TRUE)
 #'
 #' area_weights <- calculate_area_intersection_weights(
-#'   data_source_cells,
-#'   target_polygons)
+#'   sf::st_sf(dplyr::select(cell_geometry, grid_ids), agr = "constant"),
+#'   sf::st_sf(dplyr::select(geom, NAME), agr = "constant"))
 #'
-#' intersected <- execute_intersection(nc_file, variable_name, area_weights,
-#'                                     cell_geometry, cv$X, cv$Y, cv$T)
+#' execute_intersection(nc_file, variable_name, area_weights,
+#'                      cell_geometry, cv$X, cv$Y, cv$T)
 #'
 execute_intersection <- function(nc_file,
                                  variable_name,
@@ -121,6 +114,9 @@ execute_intersection <- function(nc_file,
                            Y_var_info$dimids,
                            T_var_info$dimids))
 
+    transpose <- FALSE
+    if(dimid_order[1] > dimid_order[2]) transpose <- TRUE
+
     for (i in 1:out_nrows) {
       try_backoff({
         i_data <- var.get.nc(nc, variable_name,
@@ -130,10 +126,14 @@ execute_intersection <- function(nc_file,
                                        length(Y_inds), 1)[dimid_order],
                              unpack = TRUE)
 
+        if(transpose) i_data <- t(i_data)
+
         i_data <- data.frame(d = matrix(i_data,
                                         ncol = 1,
-                                        byrow = TRUE),
-                             grid_ids = matrix(ids, ncol = 1))
+                                        byrow = FALSE),
+                             grid_ids = matrix(ids,
+                                               ncol = 1,
+                                               byrow = FALSE))
 
         i_data <- right_join(i_data,
                              intersection_weights,

@@ -135,11 +135,10 @@ construct_points <- function(x, y, prj) {
 #' @noRd
 #' @examples
 #' get_ids(5, 7)
-#' matrix(get_ids(5,7), ncol = 1)
-#' matrix(get_ids(5, 7), nrow = 1)
+#' matrix(get_ids(5,7), ncol = 1, byrow = FALSE)
 
 get_ids <- function(X_dim_size, Y_dim_size) {
   matrix(as.numeric(seq(1, X_dim_size * Y_dim_size)),
          nrow = X_dim_size, ncol = Y_dim_size,
-         byrow = T)
+         byrow = FALSE)
 }

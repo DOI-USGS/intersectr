@@ -32,7 +32,7 @@
 
 <meta property="og:title" content="Create Cell Geometry — create_cell_geometry" />
 
-<meta property="og:description" content="Creates cell geometry from vectors of x and y positions." />
+<meta property="og:description" content="Creates cell geometry from vectors of X and Y positions." />
 <meta name="twitter:card" content="summary" />
 
 <meta name="robots" content="noindex">
@@ -89,7 +89,10 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/prism_demo.html">UNKNOWN TITLE</a>
+      <a href="../articles/axes.html">Complete intersectr demo</a>
+    </li>
+    <li>
+      <a href="../articles/prism_demo.html">Complete intersectr demo</a>
     </li>
   </ul>
 </li>
@@ -121,23 +124,23 @@
 
     <div class="ref-description">
     
-    <p>Creates cell geometry from vectors of x and y positions.</p>
+    <p>Creates cell geometry from vectors of X and Y positions.</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>create_cell_geometry</span>(<span class='no'>col_coords</span>, <span class='no'>row_coords</span>, <span class='no'>prj</span>, <span class='kw'>geom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+    <pre class="usage"><span class='fu'>create_cell_geometry</span>(<span class='no'>X_coords</span>, <span class='no'>Y_coords</span>, <span class='no'>prj</span>, <span class='kw'>geom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
   <span class='kw'>buffer_dist</span> <span class='kw'>=</span> <span class='fl'>0</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
-      <th>col_coords</th>
-      <td><p>numeric center positions of x indices</p></td>
+      <th>X_coords</th>
+      <td><p>numeric center positions of X axis indices</p></td>
     </tr>
     <tr>
-      <th>row_coords</th>
-      <td><p>numeric center positions of y indices</p></td>
+      <th>Y_coords</th>
+      <td><p>numeric center positions of Y axis indices</p></td>
     </tr>
     <tr>
       <th>prj</th>

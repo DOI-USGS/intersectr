@@ -1,0 +1,60 @@
+---
+title: "Complete intersectr demo"
+author: "dblodgett@usgs.gov"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{pkgdown}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+collapse = TRUE,
+comment = "#>",
+fig.width=6,
+fig.height=4
+)
+options(scipen = 9999)
+library(magrittr)
+library(intersectr)
+```
+
+# `intersectr` and axes
+
+The data involved in the intersectr workflow is well structured, but multidimensional and can be very large. Through the various transformations that are performed it is important that we track and understand exactly what is happening. This article attempts to summarize what's happening behind the scenes -- as much for my (Dave Blodgett's) sanity as for your trust that the package is doing the right thing!
+
+## Workflow Artifacts
+
+To describe the workflow, it's useful to first describe the various information artifacts that are involved. Some of these could be considered cached intermediate artifacts, but they are useful for understanding what's going on so I include them in the discussion.
+1) NetCDF Source Data
+  These data are typically a XYT array that is much larger in XY than needed so we will try to subset it as it is read in. The axis order of the source data is almost always XYT where T varries the most quickly but this is not gaurunteed so we have to be able to request and reshape the source NetCDF from it's native axis order to our processing array.
+  
+2) NetCDF Source Coordinate Data
+  Coordinate data are typically 1d vectors that provide the spatio-temporal coordinates for an entire X, Y, or T axes of source data. In some cases, spatial coordinates are a 2d curvilinear grid of coordinate pairs. Temporal coordinates can also be 2d, representing both the time a model ran and the time coordinate of the model prediction itself. Leading the discussion below a bit, these spatio-temporal coordinates are what we use to determine what subset of the source data we need but the actual data requests are made using the underlying NetCDF axes in the order of a given data variable!
+  
+3) Simple-Features Target Polygons
+  The output of the intersectr workflow is a timeseries for each polygon in the target polygons for each variable desired from the source data. The target polygons are used to determine the subset of data required and as an input to the function to generate area-weights for intersecting cells and polygons. Once the subset and weights have been determined, the actual polygons are no longer needed. A nuance worth mentioning is that the projection of the taret polygons is not necessarily the same as the NetCDF coordinates. All the processing needs to be flexible to projection to suit user needs.
+  
+## Workflow Steps
+
+1) Create Cell Geometry
+  This step takes the source coordinate data and target polygons and returns a simple-features table containing cell geometry with an ID and indices for X and Y axes. The returned geometry is useful for spatial processing and visualization. Assuming the logic for assigning IDs to an array is known, the IDs are useful for rapidly joining a given time-step spatial array to the area intersection weights in execute intersection. The X and Y axis indices are used to determine the subset index positions of source data required.
+  
+2) Calculate Area Intersection Weights
+  As axes are concerned, this step is not very impactful. It takes two sets of geometry, a data source and target set, and returns a table of weights that can be used to generate area-weighted summaries of the source attributed to the target.  
+  
+3) Execute Intersection
+  The execute intersection step requests source data iteratively, applying the area intersection weights as it traverses a potentially massive dataset. As described above, it requires inputs that provide the subset of NetCDF source described in terms of the NetCDF data's axes. The critical sub-step of execute intersection is requesting a timestep worth of source data. The request must be made in the axis order of the source data variable and the response data appropriately identified and joined to the weight table.
+  
+## Workflow Axes Summary
+1) NetCDF Source Data
+  As discussed above, the NetCDF source data axes are always along identified NetCDF dimensions which are shared with coordinate variables, but the order of the axes can be different depending how a NetCDF source was written.
+
+2) Spatio-temporal XYT
+  Given that spatio-temporal subsetting and processing is required. Understanding how NetCDF axes relate to canonical spatio-temporal axes is critical. The create cell geometry step maps NetCDF axes onto spatio-temporal axes and creates a table of cell geometry with the mapping between the two in its attributes.
+
+3) Cell geometry ID
+  This ID is different from the other axes, but is worth describing in this context. A single function is used to assign IDs to the cell geometry and get joining IDs for the array of source data. The ID allows the 2d (XY) array to be reliably and repeatably joined to the cell geometry.
+  
+

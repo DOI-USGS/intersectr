@@ -4,13 +4,13 @@
 \alias{create_cell_geometry}
 \title{Create Cell Geometry}
 \usage{
-create_cell_geometry(col_coords, row_coords, prj, geom = NULL,
+create_cell_geometry(X_coords, Y_coords, prj, geom = NULL,
   buffer_dist = 0)
 }
 \arguments{
-\item{col_coords}{numeric center positions of x indices}
+\item{X_coords}{numeric center positions of X axis indices}
 
-\item{row_coords}{numeric center positions of y indices}
+\item{Y_coords}{numeric center positions of Y axis indices}
 
 \item{prj}{character proj4 string for x and y}
 
@@ -19,7 +19,7 @@ create_cell_geometry(col_coords, row_coords, prj, geom = NULL,
 \item{buffer_dist}{a distance to buffer the cell geometry in units of geom projection}
 }
 \description{
-Creates cell geometry from vectors of x and y positions.
+Creates cell geometry from vectors of X and Y positions.
 }
 \details{
 Intersection is performed with cell centers then geometry is constructed.

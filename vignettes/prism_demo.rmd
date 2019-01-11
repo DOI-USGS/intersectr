@@ -49,21 +49,21 @@ The create_cell_geometry function generates an `sf` `data.frame` representing ea
 (nc_prj <- ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc_file)))
 # Small diffs
 nc <- RNetCDF::open.nc(nc_file)
-col_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$X, unpack = TRUE)
-max(diff(diff(col_coords)))
-col_coords <- seq(from = col_coords[1],
-                  to = col_coords[length(col_coords)],
-                  along.with = col_coords)
-max(diff(diff(col_coords)))
-row_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE)
-max(diff(diff(row_coords)))
-row_coords <- seq(from = row_coords[1],
-                  to = row_coords[length(row_coords)],
-                  along.with = row_coords)
-max(diff(diff(col_coords)))
+X_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$X, unpack = TRUE)
+max(diff(diff(X_coords)))
+X_coords <- seq(from = X_coords[1],
+                  to = X_coords[length(X_coords)],
+                  along.with = X_coords)
+max(diff(diff(X_coords)))
+Y_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE)
+max(diff(diff(Y_coords)))
+Y_coords <- seq(from = Y_coords[1],
+                  to = Y_coords[length(Y_coords)],
+                  along.with = Y_coords)
+max(diff(diff(X_coords)))
 (cell_geometry <-
-    create_cell_geometry(col_coords = col_coords,
-                         row_coords = row_coords,
+    create_cell_geometry(X_coords = X_coords,
+                         Y_coords = Y_coords,
                          prj = nc_prj,
                          geom = geom, 
                          buffer_dist = 10000))
@@ -156,16 +156,16 @@ lines(intersected$time_stamp, apply(intersected[, 2:ncol(intersected)], 1, min),
 ```
 
 ```{r plot}
-col_inds <- seq(min(cell_geometry$col_ind), max(cell_geometry$col_ind), 1)
-row_inds <- seq(min(cell_geometry$row_ind), max(cell_geometry$row_ind), 1)
-ids <- intersectr:::get_ids(length(col_inds), length(row_inds))
+X_inds <- seq(min(cell_geometry$X_ind), max(cell_geometry$X_ind), 1)
+Y_inds <- seq(min(cell_geometry$Y_ind), max(cell_geometry$Y_ind), 1)
+ids <- intersectr:::get_ids(length(X_inds), length(Y_inds))
 dates <- RNetCDF::var.get.nc(nc, "time", unpack = TRUE)
 date_units <- RNetCDF::att.get.nc(nc, "time", "units")
 dates <- RNetCDF::utcal.nc(date_units, dates, type = "c")
 date_ind <- which(as.character(dates) == "2010-06-01")
 grid_data <- RNetCDF::var.get.nc(nc, variable_name,
-                                 start = c(min(col_inds), min(row_inds), date_ind),
-                                 count = c(length(col_inds), length(row_inds), 1), 
+                                 start = c(min(X_inds), min(Y_inds), date_ind),
+                                 count = c(length(X_inds), length(Y_inds), 1), 
                                  unpack = TRUE)
 grid_data <- data.frame(grid_data = matrix(grid_data,
                                            ncol = 1,

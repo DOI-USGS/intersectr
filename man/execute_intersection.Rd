@@ -16,7 +16,7 @@ execute_intersection(nc_file, variable_name, intersection_weights,
 \item{intersection_weights}{data.frame as output by
 \code{\link{calculate_area_intersection_weights}}}
 
-\item{cell_geometry}{sf data.frame with col_ind and row_ind columns as output by
+\item{cell_geometry}{sf data.frame with X_ind and Y_ind columns as output by
 \code{\link{create_cell_geometry}}}
 
 \item{x_var}{character variable with X axis data}

@@ -52,8 +52,8 @@ x <- var.get.nc(nc, nc_coord_vars$X, unpack = TRUE) * meters_per_km
 y <- var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE) * meters_per_km
 
 # Create cell geometry for this geom
-cell_geometry <- create_cell_geometry(col_coords = x, 
-                                      row_coords = y, 
+cell_geometry <- create_cell_geometry(X_coords = x, 
+                                      Y_coords = y, 
                                       prj = ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc)), 
                                       geom = geom, 
                                       buffer_dist = 1000)
@@ -78,14 +78,14 @@ intersected <- execute_intersection(nc_file = nc_file,
                                     t_var = nc_coord_vars$T)
 
 # Get data ready to create plots.
-col_inds <- seq(min(cell_geometry$col_ind), max(cell_geometry$col_ind), 1)
-row_inds <- seq(min(cell_geometry$row_ind), max(cell_geometry$row_ind), 1)
+X_inds <- seq(min(cell_geometry$X_ind), max(cell_geometry$X_ind), 1)
+Y_inds <- seq(min(cell_geometry$Y_ind), max(cell_geometry$Y_ind), 1)
 
-ids <- intersectr:::get_ids(length(col_inds), length(row_inds))
+ids <- intersectr:::get_ids(length(X_inds), length(Y_inds))
 
 grid_data <- var.get.nc(nc, variable_name,
-                                 start = c(min(col_inds), min(row_inds), 3),
-                                 count = c(length(col_inds), length(row_inds), 1), 
+                                 start = c(min(X_inds), min(Y_inds), 3),
+                                 count = c(length(X_inds), length(Y_inds), 1), 
                         unpack = TRUE)
 
 grid_data <- data.frame(grid_data = matrix(grid_data,

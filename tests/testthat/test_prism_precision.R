@@ -12,18 +12,18 @@ geom <- read_sf(system.file("shape/nc.shp", package = "sf"))[5, ]
 suppressWarnings(nc_prj <- ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc_file)))
 
 nc <- RNetCDF::open.nc(nc_file)
-col_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$X, unpack = TRUE)
-col_coords <- seq(from = col_coords[1],
-                  to = col_coords[length(col_coords)],
-                  along.with = col_coords)
+X_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$X, unpack = TRUE)
+X_coords <- seq(from = X_coords[1],
+                  to = X_coords[length(X_coords)],
+                  along.with = X_coords)
 
-row_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE)
-row_coords <- seq(from = row_coords[1],
-                  to = row_coords[length(row_coords)],
-                  along.with = row_coords)
+Y_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE)
+Y_coords <- seq(from = Y_coords[1],
+                  to = Y_coords[length(Y_coords)],
+                  along.with = Y_coords)
 
-suppressWarnings(cell_geometry <- create_cell_geometry(col_coords = col_coords,
-                                      row_coords = row_coords,
+suppressWarnings(cell_geometry <- create_cell_geometry(X_coords = X_coords,
+                                      Y_coords = Y_coords,
                                       prj = nc_prj,
                                       geom = geom,
                                       buffer_dist = 0.025))
@@ -56,7 +56,7 @@ dates <- RNetCDF::utcal.nc(date_units, dates, type = "c")
 date_ind <- which(as.character(dates) == "1999-01-01")
 
 vals <- RNetCDF::var.get.nc(nc, variable_name,
-                   start = c(geom_2$col_ind, geom_2$row_ind, date_ind),
+                   start = c(geom_2$X_ind, geom_2$Y_ind, date_ind),
                    count = c(1, 1, 12), unpack = TRUE)
 
 test_that("values come back 1:1 for precise grid cell with time filter", {

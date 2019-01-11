@@ -28,7 +28,7 @@ test_that("1d projected", {
     create_cell_geometry(x, y, in_prj, geom, 1000))
 
   expect(nrow(cell_geometry) == 3626)
-  expect(all(c("grid_ids", "col_ind", "row_ind") %in% names(cell_geometry)))
+  expect(all(c("grid_ids", "X_ind", "Y_ind") %in% names(cell_geometry)))
 
   data_source_cells <- st_sf(select(cell_geometry, grid_ids))
   target_polygons <- st_sf(select(geom, CNTY_ID))

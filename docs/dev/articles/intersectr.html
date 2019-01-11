@@ -57,7 +57,10 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="../articles/prism_demo.html">UNKNOWN TITLE</a>
+      <a href="../articles/axes.html">Complete intersectr demo</a>
+    </li>
+    <li>
+      <a href="../articles/prism_demo.html">Complete intersectr demo</a>
     </li>
   </ul>
 </li>
@@ -138,10 +141,10 @@
 <a class="sourceLine" id="cb1-40" title="40"><span class="co">#&gt; Warning in nc_coord_var_finder(dim, var, att, axe, variable): missing</span></a>
 <a class="sourceLine" id="cb1-41" title="41"><span class="co">#&gt; coordinate variables names in coordinates attribute trying to find non-</span></a>
 <a class="sourceLine" id="cb1-42" title="42"><span class="co">#&gt; auxiliary coordinate variables.</span></a>
-<a class="sourceLine" id="cb1-43" title="43"><span class="co">#&gt; # A tibble: 1 x 5</span></a>
-<a class="sourceLine" id="cb1-44" title="44"><span class="co">#&gt;   variable X     Y     Z     T    </span></a>
-<a class="sourceLine" id="cb1-45" title="45"><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;</span></a>
-<a class="sourceLine" id="cb1-46" title="46"><span class="co">#&gt; 1 prcp     x     y     &lt;NA&gt;  time</span></a>
+<a class="sourceLine" id="cb1-43" title="43"><span class="co">#&gt; # A tibble: 1 x 6</span></a>
+<a class="sourceLine" id="cb1-44" title="44"><span class="co">#&gt;   variable X     Y     Z     T     bounds</span></a>
+<a class="sourceLine" id="cb1-45" title="45"><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; </span></a>
+<a class="sourceLine" id="cb1-46" title="46"><span class="co">#&gt; 1 prcp     x     y     &lt;NA&gt;  time  &lt;NA&gt;</span></a>
 <a class="sourceLine" id="cb1-47" title="47"></a>
 <a class="sourceLine" id="cb1-48" title="48"><span class="co"># Pull out the coordinate variables and get them in projection units.</span></a>
 <a class="sourceLine" id="cb1-49" title="49">meters_per_km &lt;-<span class="st"> </span><span class="dv">1000</span></a>
@@ -149,8 +152,8 @@
 <a class="sourceLine" id="cb1-51" title="51">y &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/RNetCDF/topics/var.get.nc">var.get.nc</a></span>(nc, nc_coord_vars<span class="op">$</span>Y, <span class="dt">unpack =</span> <span class="ot">TRUE</span>) <span class="op">*</span><span class="st"> </span>meters_per_km</a>
 <a class="sourceLine" id="cb1-52" title="52"></a>
 <a class="sourceLine" id="cb1-53" title="53"><span class="co"># Create cell geometry for this geom</span></a>
-<a class="sourceLine" id="cb1-54" title="54">cell_geometry &lt;-<span class="st"> </span><span class="kw"><a href="../reference/create_cell_geometry.html">create_cell_geometry</a></span>(<span class="dt">col_coords =</span> x, </a>
-<a class="sourceLine" id="cb1-55" title="55">                                      <span class="dt">row_coords =</span> y, </a>
+<a class="sourceLine" id="cb1-54" title="54">cell_geometry &lt;-<span class="st"> </span><span class="kw"><a href="../reference/create_cell_geometry.html">create_cell_geometry</a></span>(<span class="dt">X_coords =</span> x, </a>
+<a class="sourceLine" id="cb1-55" title="55">                                      <span class="dt">Y_coords =</span> y, </a>
 <a class="sourceLine" id="cb1-56" title="56">                                      <span class="dt">prj =</span> ncmeta<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/ncmeta/topics/nc_gm_to_prj">nc_gm_to_prj</a></span>(ncmeta<span class="op">::</span><span class="kw"><a href="https://www.rdocumentation.org/packages/ncmeta/topics/nc_grid_mapping_atts">nc_grid_mapping_atts</a></span>(nc)), </a>
 <a class="sourceLine" id="cb1-57" title="57">                                      <span class="dt">geom =</span> geom, </a>
 <a class="sourceLine" id="cb1-58" title="58">                                      <span class="dt">buffer_dist =</span> <span class="dv">1000</span>)</a>
@@ -175,14 +178,14 @@
 <a class="sourceLine" id="cb1-77" title="77">                                    <span class="dt">t_var =</span> nc_coord_vars<span class="op">$</span>T)</a>
 <a class="sourceLine" id="cb1-78" title="78"></a>
 <a class="sourceLine" id="cb1-79" title="79"><span class="co"># Get data ready to create plots.</span></a>
-<a class="sourceLine" id="cb1-80" title="80">col_inds &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/seq">seq</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">min</a></span>(cell_geometry<span class="op">$</span>col_ind), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">max</a></span>(cell_geometry<span class="op">$</span>col_ind), <span class="dv">1</span>)</a>
-<a class="sourceLine" id="cb1-81" title="81">row_inds &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/seq">seq</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">min</a></span>(cell_geometry<span class="op">$</span>row_ind), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">max</a></span>(cell_geometry<span class="op">$</span>row_ind), <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb1-80" title="80">X_inds &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/seq">seq</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">min</a></span>(cell_geometry<span class="op">$</span>X_ind), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">max</a></span>(cell_geometry<span class="op">$</span>X_ind), <span class="dv">1</span>)</a>
+<a class="sourceLine" id="cb1-81" title="81">Y_inds &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/seq">seq</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">min</a></span>(cell_geometry<span class="op">$</span>Y_ind), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">max</a></span>(cell_geometry<span class="op">$</span>Y_ind), <span class="dv">1</span>)</a>
 <a class="sourceLine" id="cb1-82" title="82"></a>
-<a class="sourceLine" id="cb1-83" title="83">ids &lt;-<span class="st"> </span>intersectr<span class="op">:::</span><span class="kw">get_ids</span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(col_inds), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(row_inds))</a>
+<a class="sourceLine" id="cb1-83" title="83">ids &lt;-<span class="st"> </span>intersectr<span class="op">:::</span><span class="kw">get_ids</span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(X_inds), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(Y_inds))</a>
 <a class="sourceLine" id="cb1-84" title="84"></a>
 <a class="sourceLine" id="cb1-85" title="85">grid_data &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/RNetCDF/topics/var.get.nc">var.get.nc</a></span>(nc, variable_name,</a>
-<a class="sourceLine" id="cb1-86" title="86">                                 <span class="dt">start =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">min</a></span>(col_inds), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">min</a></span>(row_inds), <span class="dv">3</span>),</a>
-<a class="sourceLine" id="cb1-87" title="87">                                 <span class="dt">count =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(col_inds), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(row_inds), <span class="dv">1</span>), </a>
+<a class="sourceLine" id="cb1-86" title="86">                                 <span class="dt">start =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">min</a></span>(X_inds), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/Extremes">min</a></span>(Y_inds), <span class="dv">3</span>),</a>
+<a class="sourceLine" id="cb1-87" title="87">                                 <span class="dt">count =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/c">c</a></span>(<span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(X_inds), <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/length">length</a></span>(Y_inds), <span class="dv">1</span>), </a>
 <a class="sourceLine" id="cb1-88" title="88">                        <span class="dt">unpack =</span> <span class="ot">TRUE</span>)</a>
 <a class="sourceLine" id="cb1-89" title="89"></a>
 <a class="sourceLine" id="cb1-90" title="90">grid_data &lt;-<span class="st"> </span><span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/data.frame">data.frame</a></span>(<span class="dt">grid_data =</span> <span class="kw"><a href="https://www.rdocumentation.org/packages/base/topics/matrix">matrix</a></span>(grid_data,</a>

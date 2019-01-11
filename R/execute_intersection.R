@@ -7,7 +7,7 @@
 #' @param variable_name character name of variable in NetCDF source to access
 #' @param intersection_weights data.frame as output by
 #' \code{\link{calculate_area_intersection_weights}}
-#' @param cell_geometry sf data.frame with col_ind and row_ind columns as output by
+#' @param cell_geometry sf data.frame with X_ind and Y_ind columns as output by
 #' \code{\link{create_cell_geometry}}
 #' @param x_var character variable with X axis data
 #' @param y_var character variable with Y axis data
@@ -68,22 +68,22 @@ execute_intersection <- function(nc_file,
 
   if (nc_var_info$ndims != 3) stop("only 3d variables are supported")
 
-  col_var_info <- var.inq.nc(nc, x_var)
-  row_var_info <- var.inq.nc(nc, y_var)
-  t_var_info <- var.inq.nc(nc, t_var)
+  X_var_info <- var.inq.nc(nc, x_var)
+  Y_var_info <- var.inq.nc(nc, y_var)
+  T_var_info <- var.inq.nc(nc, t_var)
 
-  if (col_var_info$ndims > 1 | row_var_info$ndims > 1 | t_var_info$ndims > 1)
+  if (X_var_info$ndims > 1 | Y_var_info$ndims > 1 | T_var_info$ndims > 1)
     stop("only 1d coordinate variables supported")
 
-  time_steps <- utcal.nc(att.get.nc(nc, t_var_info$name, "units"),
-                         var.get.nc(nc, t_var_info$name, unpack = TRUE),
+  time_steps <- utcal.nc(att.get.nc(nc, T_var_info$name, "units"),
+                         var.get.nc(nc, T_var_info$name, unpack = TRUE),
                          "c")
   time_steps <- data.frame(time_stamp = time_steps)
 
-  col_inds <- seq(min(cell_geometry$col_ind), max(cell_geometry$col_ind), 1)
-  row_inds <- seq(min(cell_geometry$row_ind), max(cell_geometry$row_ind), 1)
+  X_inds <- seq(min(cell_geometry$X_ind), max(cell_geometry$X_ind), 1)
+  Y_inds <- seq(min(cell_geometry$Y_ind), max(cell_geometry$Y_ind), 1)
 
-  ids <- get_ids(length(col_inds), length(row_inds))
+  ids <- get_ids(length(X_inds), length(Y_inds))
 
   if (is.null(start_datetime) & is.null(end_datetime)) {
 
@@ -117,17 +117,17 @@ execute_intersection <- function(nc_file,
     out <- matrix(nrow = out_nrows, ncol = out_ncols)
 
     dimid_order <- match(nc_var_info$dimids,
-                         c(col_var_info$dimids,
-                           row_var_info$dimids,
-                           t_var_info$dimids))
+                         c(X_var_info$dimids,
+                           Y_var_info$dimids,
+                           T_var_info$dimids))
 
     for (i in 1:out_nrows) {
       try_backoff({
         i_data <- var.get.nc(nc, variable_name,
-                             start = c(min(col_inds),
-                                       min(row_inds), t_inds[i])[dimid_order],
-                             count = c(length(col_inds),
-                                       length(row_inds), 1)[dimid_order],
+                             start = c(min(X_inds),
+                                       min(Y_inds), t_inds[i])[dimid_order],
+                             count = c(length(X_inds),
+                                       length(Y_inds), 1)[dimid_order],
                              unpack = TRUE)
 
         i_data <- data.frame(d = matrix(i_data,

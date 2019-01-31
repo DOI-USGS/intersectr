@@ -15,8 +15,9 @@
 #' @param start_datetime character or POSIX character format is
 #' \code{\link{strptime}} default e.g. "2010-10-10 10:10:10"
 #' @param end_datetime character or POSIX
-#' @importFrom dplyr right_join mutate summarise group_by ungroup
+#' @param status boolean print status if TRUE
 #' @importFrom RNetCDF open.nc dim.inq.nc var.inq.nc att.get.nc var.get.nc utcal.nc
+#' @importFrom data.table data.table
 #' @export
 #'
 #' @examples
@@ -52,7 +53,8 @@ execute_intersection <- function(nc_file,
                                  cell_geometry,
                                  x_var, y_var, t_var,
                                  start_datetime = NULL,
-                                 end_datetime = NULL) {
+                                 end_datetime = NULL,
+                                 status = FALSE) {
 
   names(intersection_weights) <- c("grid_ids", "poly_id", "w")
 
@@ -76,7 +78,11 @@ execute_intersection <- function(nc_file,
   X_inds <- seq(min(cell_geometry$X_ind), max(cell_geometry$X_ind), 1)
   Y_inds <- seq(min(cell_geometry$Y_ind), max(cell_geometry$Y_ind), 1)
 
-  ids <- get_ids(length(X_inds), length(Y_inds))
+  rm(cell_geometry)
+
+  ids <- as.integer(matrix(get_ids(length(X_inds), length(Y_inds)),
+                           ncol = 1,
+                           byrow = FALSE))
 
   if (is.null(start_datetime) & is.null(end_datetime)) {
 
@@ -104,10 +110,14 @@ execute_intersection <- function(nc_file,
     t_inds <- which(t_inds)
 
     out_nrows <- length(t_inds)
+
+    if(out_nrows == 0) {
+      stop("No time steps intersect start and stop datetimes.")
+    }
   }
     out_ncols <- length(unique(intersection_weights[, 2][[1]]))
 
-    out <- matrix(nrow = out_nrows, ncol = out_ncols)
+    out <- matrix(0, nrow = out_nrows, ncol = out_ncols)
 
     dimid_order <- match(nc_var_info$dimids,
                          c(X_var_info$dimids,
@@ -116,6 +126,11 @@ execute_intersection <- function(nc_file,
 
     transpose <- FALSE
     if(dimid_order[1] > dimid_order[2]) transpose <- TRUE
+
+    intersection_weights <- data.table(intersection_weights)
+    sum_weights <- intersection_weights[, list(sw = sum(w, na.rm = TRUE)), by = poly_id]
+
+    join_indices <- match(intersection_weights$grid_ids, ids)
 
     for (i in 1:out_nrows) {
       try_backoff({
@@ -128,23 +143,18 @@ execute_intersection <- function(nc_file,
 
         if(transpose) i_data <- t(i_data)
 
-        i_data <- data.frame(d = matrix(i_data,
+        i_data <- data.table(d = as.numeric(matrix(i_data,
                                         ncol = 1,
-                                        byrow = FALSE),
-                             grid_ids = matrix(ids,
-                                               ncol = 1,
-                                               byrow = FALSE))
+                                        byrow = FALSE)))
 
-        i_data <- right_join(i_data,
-                             intersection_weights,
-                             by = c("grid_ids"))
-        i_data <- group_by(i_data, poly_id)
-        i_data <- summarise(i_data,
-                            d = (sum( (d * w), na.rm = T) /
-                                   sum(w, na.rm = T)))
-          i_data <- ungroup(i_data)
+        i_data <- cbind(intersection_weights,
+                        i_data[join_indices, ])
 
-        out[i, ] <- i_data$d
+        i_data <- i_data[, list(d = sum( (d * w), na.rm = TRUE)), by = poly_id]
+
+        out[i, ] <- as.numeric(i_data$d / sum_weights$sw)
+
+        if(status) print(paste(i, "of", out_nrows))
       })
     }
 

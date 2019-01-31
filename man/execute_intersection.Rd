@@ -6,7 +6,7 @@
 \usage{
 execute_intersection(nc_file, variable_name, intersection_weights,
   cell_geometry, x_var, y_var, t_var, start_datetime = NULL,
-  end_datetime = NULL)
+  end_datetime = NULL, status = FALSE)
 }
 \arguments{
 \item{nc_file}{character path or OPeNDAP URL to NetCDF source}
@@ -29,6 +29,8 @@ execute_intersection(nc_file, variable_name, intersection_weights,
 \code{\link{strptime}} default e.g. "2010-10-10 10:10:10"}
 
 \item{end_datetime}{character or POSIX}
+
+\item{status}{boolean print status if TRUE}
 }
 \description{
 Traverses many time steps of data applying

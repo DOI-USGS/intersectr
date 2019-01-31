@@ -10,7 +10,7 @@ Description: Package for intersecting spatiotemporal attribute data. The primary
     need to be intersected with a spatial modeling mesh or set of spatial modeling units.
 URL: https://github.com/dblodgett-usgs/intersectr
 BugReports: https://github.com/dblodgett-usgs.intersectr/issues
-Imports: sf, stars, dplyr, RNetCDF, ncmeta, areal
+Imports: sf, stars, dplyr, RNetCDF, ncmeta, areal, data.table
 Remotes: hypertidy/ncmeta, r-spatial/stars, r-spatial/sf 
 Suggests: testthat, tibble, ncdfgeom, knitr, rmarkdown
 License: CC0

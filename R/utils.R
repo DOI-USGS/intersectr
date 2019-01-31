@@ -2,6 +2,8 @@
 #' @description Helper function to get start and end time stamps from a NetCDF source.
 #' @param nc_file character path or url to a NetCDF source
 #' @param t_var character name of time variable
+#' @export
+#' @importFrom RNetCDF open.nc var.inq.nc utcal.nc close.nc att.get.nc var.get.nc
 #'
 #' @examples
 #' nc_file <- system.file("extdata/metdata.nc", package = "intersectr")

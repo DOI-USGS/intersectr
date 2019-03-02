@@ -134,6 +134,7 @@ execute_intersection <- function(nc_file,
 
     for (i in 1:out_nrows) {
       try_backoff({
+        timer <- Sys.time()
         i_data <- var.get.nc(nc, variable_name,
                              start = c(min(X_inds),
                                        min(Y_inds), t_inds[i])[dimid_order],
@@ -154,7 +155,7 @@ execute_intersection <- function(nc_file,
 
         out[i, ] <- as.numeric(i_data$d / sum_weights$sw)
 
-        if(status) print(paste(i, "of", out_nrows))
+        if(status) print(paste(i, "of", out_nrows, Sys.time() - timer))
       })
     }
 

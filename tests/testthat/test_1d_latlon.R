@@ -53,4 +53,15 @@ test_that("1d lat/lon", {
                                       end_datetime = "2018-09-14 00:00:00")
 
   expect(nrow(intersected) == 2)
+
+  unlink("test.nc")
+
+  expect_warning(out_f <- write_ncdf(nc_file = "test.nc", int_data = intersected,
+                      variable_name = "test_varname", variable_units = "test_varunits"),
+                 "inserting fake latitude and longitude values")
+
+  expect(file.exists("test.nc"))
+
+  unlink("test.nc")
+
 })

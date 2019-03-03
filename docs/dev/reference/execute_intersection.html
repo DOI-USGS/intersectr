@@ -132,7 +132,8 @@ intersection weights for each time step.</p>
 
     <pre class="usage"><span class='fu'>execute_intersection</span>(<span class='no'>nc_file</span>, <span class='no'>variable_name</span>, <span class='no'>intersection_weights</span>,
   <span class='no'>cell_geometry</span>, <span class='no'>x_var</span>, <span class='no'>y_var</span>, <span class='no'>t_var</span>, <span class='kw'>start_datetime</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>end_datetime</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>status</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
+  <span class='kw'>end_datetime</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>status</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>writer_fun</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
+  <span class='kw'>out_file</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>out_var_meta</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -180,7 +181,43 @@ intersection weights for each time step.</p>
       <th>status</th>
       <td><p>boolean print status if TRUE</p></td>
     </tr>
+    <tr>
+      <th>writer_fun</th>
+      <td><p>a function that implements the writer API described in details</p></td>
+    </tr>
+    <tr>
+      <th>out_file</th>
+      <td><p>character path for output file to be used with writer_fun</p></td>
+    </tr>
+    <tr>
+      <th>out_var_meta</th>
+      <td><p>list passed to writer_fun with ids</p></td>
+    </tr>
     </table>
+    
+    <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
+
+    <p>The writer_fun input can be a function passed in that supports a basic API.
+The function should the following inputs:</p><ol>
+<li><p>file_handle: character or otherwise see description</p></li>
+<li><p>step: the step to write. Special values are 0 and -1 for
+  initialization and closing respectively</p></li>
+<li><p>size: a length 2 integer vector giving rows and cols of the output
+  e.g. c(100, 10) for 100 time steps and 10 columns</p></li>
+<li><p>var_meta: a named list containing variable name, long_name, units, and
+  ids. e.g. list(name = "prcp", long_name = "precpiptation in mm", units = "mm",
+  ids = c("1", "2", "3")) the first three values of this list are taken from the
+  out_var_meta input.</p></li>
+<li><p>timestep_data: a one row data.frame with time in the first column and
+  output data in 2:ncol(timestep_data)</p></li>
+</ol><p>The function will be called once with step = 0. This should be used to initialize
+the output.</p>
+<p>Initialization should return a file path or open file handle, such as an RNetCDF object.</p>
+<p>The function will be called once for each timestep with step from 1:timesteps Each
+row should be written as it is provided. This should return the file path or open
+file handle.</p>
+<p>The function will be called once with step = -1 to indicate the file can be closed. The
+final return value is discarded and the out_file input is returned.</p>
     
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
@@ -219,7 +256,9 @@ intersection weights for each time step.</p>
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
       <li><a href="#arguments">Arguments</a></li>
-            
+      
+      <li><a href="#details">Details</a></li>
+      
       <li><a href="#examples">Examples</a></li>
     </ul>
 

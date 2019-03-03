@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Function reference • intersectr</title>
+<title>Write output to NetCDF — write_ncdf • intersectr</title>
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
@@ -30,7 +30,10 @@
 
 
 
-<meta property="og:title" content="Function reference" />
+<meta property="og:title" content="Write output to NetCDF — write_ncdf" />
+
+<meta property="og:description" content="Helper function to write output to NetCDF" />
+<meta name="twitter:card" content="summary" />
 
 <meta name="robots" content="noindex">
 
@@ -47,7 +50,7 @@
   </head>
 
   <body>
-    <div class="container template-reference-index">
+    <div class="container template-reference-topic">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -112,66 +115,63 @@
       </header>
 
 <div class="row">
-  <div class="contents col-md-9">
+  <div class="col-md-9 contents">
     <div class="page-header">
-      <h1>Reference</h1>
+    <h1>Write output to NetCDF</h1>
+    <small class="dont-index">Source: <a href='https://github.com/dblodgett-usgs/intersectr/blob/master/R/utils.R'><code>R/utils.R</code></a></small>
+    <div class="hidden name"><code>write_ncdf.Rd</code></div>
     </div>
 
-    <table class="ref-index">
+    <div class="ref-description">
+    
+    <p>Helper function to write output to NetCDF</p>
+    
+    </div>
 
-    <colgroup>
-      
-      <col class="alias" />
-      <col class="title" />
-    </colgroup>
-
-    <tbody>
-      <tr>
-        <th colspan="2">
-          <h2 id="section-all-functions" class="hasAnchor"><a href="#section-all-functions" class="anchor"></a>All functions</h2>
-          <p class="section-desc"></p>
-        </th>
-      </tr>
-      <tr>
-        
-        <td>
-          <p><code><a href="calculate_area_intersection_weights.html">calculate_area_intersection_weights()</a></code> </p>
-        </td>
-        <td><p>Area Weighted Intersection (areal implementation)</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="create_cell_geometry.html">create_cell_geometry()</a></code> </p>
-        </td>
-        <td><p>Create Cell Geometry</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="execute_intersection.html">execute_intersection()</a></code> </p>
-        </td>
-        <td><p>Execute Intersection</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="get_timerange.html">get_timerange()</a></code> </p>
-        </td>
-        <td><p>Get Timerange</p></td>
-      </tr><tr>
-        
-        <td>
-          <p><code><a href="write_ncdf.html">write_ncdf()</a></code> </p>
-        </td>
-        <td><p>Write output to NetCDF</p></td>
-      </tr>
-    </tbody>
+    <pre class="usage"><span class='fu'>write_ncdf</span>(<span class='no'>nc_file</span>, <span class='no'>int_data</span>, <span class='no'>variable_name</span>, <span class='no'>variable_units</span>,
+  <span class='kw'>variable_long_name</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>lats</span> <span class='kw'>=</span> <span class='kw'>NULL</span>, <span class='kw'>lons</span> <span class='kw'>=</span> <span class='kw'>NULL</span>)</pre>
+    
+    <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
+    <table class="ref-arguments">
+    <colgroup><col class="name" /><col class="desc" /></colgroup>
+    <tr>
+      <th>nc_file</th>
+      <td><p>character path or url to a NetCDF source</p></td>
+    </tr>
+    <tr>
+      <th>int_data</th>
+      <td><p>data.frame as output by execute_intersection</p></td>
+    </tr>
+    <tr>
+      <th>variable_name</th>
+      <td><p>character name for data variable</p></td>
+    </tr>
+    <tr>
+      <th>variable_units</th>
+      <td><p>character units for data variable</p></td>
+    </tr>
+    <tr>
+      <th>variable_long_name</th>
+      <td><p>character optional long name for data variable</p></td>
+    </tr>
+    <tr>
+      <th>lats</th>
+      <td><p>numeric vector giving representative latitude for each time series</p></td>
+    </tr>
+    <tr>
+      <th>lons</th>
+      <td><p>numeric vector giving representative longitude for each time series</p></td>
+    </tr>
     </table>
-  </div>
+    
 
+  </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>
     <ul class="nav nav-pills nav-stacked">
-      <li><a href="#section-all-functions">All functions</a></li>
-    </ul>
+      <li><a href="#arguments">Arguments</a></li>
+                </ul>
+
   </div>
 </div>
 

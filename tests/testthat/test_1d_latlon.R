@@ -64,4 +64,15 @@ test_that("1d lat/lon", {
 
   unlink("test.nc")
 
+  test_file <- execute_intersection(nc_file, variable_name, area_weights,
+                       cell_geometry, x_var, y_var, t_var,
+                       writer_fun = write_incremental,
+                       out_file = "test.nc",
+                       out_var_meta = list(name = "test",
+                                           long_name = "long_test",
+                                           units = "mm"))
+  expect(file.exists("test.nc"))
+
+  unlink("test.nc")
+
 })

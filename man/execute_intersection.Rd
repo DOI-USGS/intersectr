@@ -6,7 +6,8 @@
 \usage{
 execute_intersection(nc_file, variable_name, intersection_weights,
   cell_geometry, x_var, y_var, t_var, start_datetime = NULL,
-  end_datetime = NULL, status = FALSE)
+  end_datetime = NULL, status = FALSE, writer_fun = NULL,
+  out_file = NULL, out_var_meta = NULL)
 }
 \arguments{
 \item{nc_file}{character path or OPeNDAP URL to NetCDF source}
@@ -31,10 +32,44 @@ execute_intersection(nc_file, variable_name, intersection_weights,
 \item{end_datetime}{character or POSIX}
 
 \item{status}{boolean print status if TRUE}
+
+\item{writer_fun}{a function that implements the writer API described in details}
+
+\item{out_file}{character path for output file to be used with writer_fun}
+
+\item{out_var_meta}{list passed to writer_fun with ids}
 }
 \description{
 Traverses many time steps of data applying
 intersection weights for each time step.
+}
+\details{
+The writer_fun input can be a function passed in that supports a basic API.
+The function should the following inputs:
+\enumerate{
+  \item{file_handle: character or otherwise see description}
+  \item{step: the step to write. Special values are 0 and -1 for
+  initialization and closing respectively}
+  \item{size: a length 2 integer vector giving rows and cols of the output
+  e.g. c(100, 10) for 100 time steps and 10 columns}
+  \item{var_meta: a named list containing variable name, long_name, units, and
+  ids. e.g. list(name = "prcp", long_name = "precpiptation in mm", units = "mm",
+  ids = c("1", "2", "3")) the first three values of this list are taken from the
+  out_var_meta input.}
+  \item{timestep_data: a one row data.frame with time in the first column and
+  output data in 2:ncol(timestep_data)}
+}
+The function will be called once with step = 0. This should be used to initialize
+the output.
+
+Initialization should return a file path or open file handle, such as an RNetCDF object.
+
+The function will be called once for each timestep with step from 1:timesteps Each
+row should be written as it is provided. This should return the file path or open
+file handle.
+
+The function will be called once with step = -1 to indicate the file can be closed. The
+final return value is discarded and the out_file input is returned.
 }
 \examples{
 nc_file <- system.file("extdata/metdata.nc", package = "intersectr")

@@ -16,8 +16,38 @@
 #' \code{\link{strptime}} default e.g. "2010-10-10 10:10:10"
 #' @param end_datetime character or POSIX
 #' @param status boolean print status if TRUE
+#' @param writer_fun a function that implements the writer API described in details
+#' @param out_file character path for output file to be used with writer_fun
+#' @param out_var_meta list passed to writer_fun with ids
 #' @importFrom RNetCDF open.nc dim.inq.nc var.inq.nc att.get.nc var.get.nc utcal.nc
 #' @importFrom data.table data.table
+#' @details The writer_fun input can be a function passed in that supports a basic API.
+#' The function should the following inputs:
+#' \enumerate{
+#'   \item{file_handle: character or otherwise see description}
+#'   \item{step: the step to write. Special values are 0 and -1 for
+#'   initialization and closing respectively}
+#'   \item{size: a length 2 integer vector giving rows and cols of the output
+#'   e.g. c(100, 10) for 100 time steps and 10 columns}
+#'   \item{var_meta: a named list containing variable name, long_name, units, and
+#'   ids. e.g. list(name = "prcp", long_name = "precpiptation in mm", units = "mm",
+#'   ids = c("1", "2", "3")) the first three values of this list are taken from the
+#'   out_var_meta input.}
+#'   \item{timestep_data: a one row data.frame with time in the first column and
+#'   output data in 2:ncol(timestep_data)}
+#' }
+#' The function will be called once with step = 0. This should be used to initialize
+#' the output.
+#'
+#' Initialization should return a file path or open file handle, such as an RNetCDF object.
+#'
+#' The function will be called once for each timestep with step from 1:timesteps Each
+#' row should be written as it is provided. This should return the file path or open
+#' file handle.
+#'
+#' The function will be called once with step = -1 to indicate the file can be closed. The
+#' final return value is discarded and the out_file input is returned.
+#'
 #' @export
 #'
 #' @examples
@@ -47,6 +77,7 @@
 #' execute_intersection(nc_file, variable_name, area_weights,
 #'                      cell_geometry, cv$X, cv$Y, cv$T)
 #'
+
 execute_intersection <- function(nc_file,
                                  variable_name,
                                  intersection_weights,
@@ -54,9 +85,14 @@ execute_intersection <- function(nc_file,
                                  x_var, y_var, t_var,
                                  start_datetime = NULL,
                                  end_datetime = NULL,
-                                 status = FALSE) {
+                                 status = FALSE,
+                                 writer_fun = NULL,
+                                 out_file = NULL,
+                                 out_var_meta = NULL) {
 
   names(intersection_weights) <- c("grid_ids", "poly_id", "w")
+
+  intersection_weights <- dplyr::filter(intersection_weights, !is.na(poly_id))
 
   nc <- open.nc(nc_file)
   nc_var_info <- var.inq.nc(nc, variable_name)
@@ -117,7 +153,15 @@ execute_intersection <- function(nc_file,
   }
     out_ncols <- length(unique(intersection_weights[, 2][[1]]))
 
-    out <- matrix(0, nrow = out_nrows, ncol = out_ncols)
+    out_names <- unique(intersection_weights$poly_id)
+
+    if(!is.null(writer_fun)) {
+      size <- c(out_nrows, out_ncols)
+      var_meta <- c(out_var_meta, list(ids = out_names))
+      file_handle <- writer_fun(out_file, step = 0, size = size, var_meta = var_meta)
+    } else {
+      out <- matrix(0, nrow = out_nrows, ncol = out_ncols)
+    }
 
     dimid_order <- match(nc_var_info$dimids,
                          c(X_var_info$dimids,
@@ -153,23 +197,35 @@ execute_intersection <- function(nc_file,
 
         i_data <- i_data[, list(d = sum( (d * w), na.rm = TRUE)), by = poly_id]
 
-        out[i, ] <- as.numeric(i_data$d / sum_weights$sw)
+        i_data <- as.numeric(i_data$d / sum_weights$sw)
+
+        if(!is.null(writer_fun)) {
+          file_handle <- writer_fun(file_handle, step = i, size = size,
+                                    var_meta = var_meta,
+                                    timestep_data = list(time_steps[i, ], i_data))
+
+        } else {
+          out[i, ] <- i_data
+        }
 
         if(status) print(paste(i, "of", out_nrows, Sys.time() - timer))
       })
     }
 
-  out <- data.frame(out)
+    if(!is.null(writer_fun)) {
+      writer_fun(file_handle, step = -1, size = size, var_meta = var_meta)
+      return(out_file)
+    } else {
+      out <- data.frame(out)
 
-  out_names <- as.character(unique(i_data$poly_id))
+      out <- select(out, which(!is.na(out_names)))
 
-  out <- select(out, which(!is.na(out_names)))
+      out_names <- out_names[which(!is.na(out_names))]
 
-  out_names <- out_names[which(!is.na(out_names))]
+      names(out) <- out_names
 
-  names(out) <- out_names
-
-  return(cbind(time_steps, out))
+      return(cbind(time_steps, out))
+    }
 }
 
 # Taken from: https://github.com/ramhiser/retry/blob/master/R/try-backoff.r

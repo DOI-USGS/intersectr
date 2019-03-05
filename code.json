@@ -1,0 +1,48 @@
+[
+  {
+    "name": "intersectr",
+    "organization": "U.S. Geological Survey",
+    "description": "Spatiotemporal Intersections for R",
+    "version": "0.0.1",
+    "status": "Beta", 
+
+    "permissions": {
+      "usageType": "openSource",
+      "licenses": [
+        {
+          "name": "Public Domain, CC0-1.0",
+          "URL": "https://code.usgs.gov/water/intersectr/blob/master/LICENSE"
+        }
+        ]
+    },
+
+    "homepageURL": "https://code.usgs.gov/water/intersectr/",
+    "downloadURL": "https://code.usgs.gov/water/intersectr/-/archive/master/nhdplustools-master.zip",
+    "disclaimerURL": "https://code.usgs.gov/water/intersectr/blob/master/DISCLAIMER.md",
+    "repositoryURL": "https://code.usgs.gov/water/intersectr.git",
+    "vcs": "git",
+
+    "laborHours": 500,
+
+    "tags": [
+      "R",
+      "intersection",
+      "timeseries",
+      "USGS",
+      "water"
+      ],
+
+    "languages": [
+      "R"
+      ],
+
+    "contact": {
+      "name": "David Blodgett",
+      "email": "dblodgett@usgs.gov"
+    },
+
+    "date": {
+      "metadataLastUpdated": "2019-03-05"
+    }
+  }
+]

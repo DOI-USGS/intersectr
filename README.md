@@ -2,15 +2,15 @@
 
 `intersectr` is an in development package for intersecting spatial attribute data. The primary emphasis is on gridded time-series data such as meteorological forcings that need to be intersected with a spatial modeling mesh or set of spatial modeling units.
 
-![demo image with lat lon data](https://dblodgett-usgs.github.io/intersectr/demo_images/metdata.png)
+![demo image with lat lon data](https://usgs-r.github.io/intersectr/demo_images/metdata.png)
 
-![demo image with projected data](https://dblodgett-usgs.github.io/intersectr/demo_images/daymet.png)
+![demo image with projected data](https://usgs-r.github.io/intersectr/demo_images/daymet.png)
 
 ### Installation:
 
 ```
 install.packages("devtools")
-devtools::install_github("dblodgett-usgs/intersectr")
+devtools::install_github("USGS-R/intersectr")
 ```
 
 ### Contributing:

@@ -8,8 +8,8 @@ Depends:
 Description: Package for intersecting spatiotemporal attribute data. The primary 
     emphasis is on gridded time-series data such as meteorological forcings that 
     need to be intersected with a spatial modeling mesh or set of spatial modeling units.
-URL: https://github.com/dblodgett-usgs/intersectr
-BugReports: https://github.com/dblodgett-usgs.intersectr/issues
+URL: https://github.com/USGS-R/intersectr
+BugReports: https://github.com/USGS-R/intersectr/issues
 Imports: sf, stars, dplyr, RNetCDF, ncmeta, areal, data.table, ncdfgeom
 Remotes: hypertidy/ncmeta, r-spatial/stars, r-spatial/sf, USGS-R/ncdfgeom 
 Suggests: testthat, tibble, knitr, rmarkdown

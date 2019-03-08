@@ -56,3 +56,32 @@ test_that("1d projected", {
 
   expect(nrow(intersected) == 3)
 })
+
+test_that("1d projected", {
+  # library(ncmeta)
+  #
+  # nc_file <- "https://thredds.daac.ornl.gov/thredds-daymet/dodsC/daymet-v3-agg/na.ncml"
+  # variable_name <- "prcp"
+  #
+  # suppressWarnings(nc_coord_vars <- nc_coord_var(nc_file, variable_name))
+  #
+  # nc <- RNetCDF::open.nc(nc_file)
+  # nc_prj <- ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc_file))
+  # X_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$X[2], unpack = TRUE)
+  # Y_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$Y[2], unpack = TRUE)
+
+  test_data <- readRDS("data/daymet_cell_test.rds")
+
+  geom <- sf::read_sf(system.file("shape/nc.shp", package = "sf")) %>%
+    st_transform(5070) %>%
+    dplyr::filter(CNTY_ID == 2156)
+
+  cell_geometry <-
+    create_cell_geometry(X_coords = test_data$X_coords,
+                         Y_coords = test_data$Y_coords,
+                         prj = test_data$nc_prj,
+                         geom = geom)
+
+  expect(nrow(cell_geometry) == 3384)
+
+})

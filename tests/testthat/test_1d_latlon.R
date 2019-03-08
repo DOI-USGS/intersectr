@@ -26,9 +26,15 @@ test_that("1d lat/lon", {
   in_prj <- "+init=epsg:4326"
 
   cell_geometry <- suppressWarnings(
+    create_cell_geometry(x, y, in_prj, geom, 500))
+
+  expect(nrow(cell_geometry) == 180)
+
+  cell_geometry <- suppressWarnings(
     create_cell_geometry(x, y, in_prj, geom, 1000))
 
-  expect(nrow(cell_geometry) == 200)
+  expect(nrow(cell_geometry) == 210)
+
   expect(all(c("grid_ids", "X_ind", "Y_ind") %in% names(cell_geometry)))
 
   data_source_cells <- st_sf(select(cell_geometry, grid_ids))

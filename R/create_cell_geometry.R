@@ -11,8 +11,8 @@
 #' @details Intersection is performed with cell centers then geometry is constructed.
 #' A buffer may be required to fully cover geometry with cells.
 #'
-#' @importFrom sf st_sf st_as_sf st_transform st_buffer st_intersection st_convex_hull
-#' st_join st_contains "st_crs<-" st_union
+#' @importFrom sf st_sf st_as_sf st_transform st_buffer st_join st_contains
+#' "st_crs<-" st_union st_bbox
 #' @importFrom dplyr filter
 #' @importFrom stars st_as_stars st_dimensions
 #' @export
@@ -64,24 +64,21 @@ create_cell_geometry <- function(X_coords, Y_coords, prj, geom = NULL, buffer_di
     dif_dist_y <- mean(dif_dist_y)
   }
 
-  sf_points <- construct_points(X_coords, Y_coords, prj)
+  if(!is.null(geom)) {
+    geom <- st_buffer(st_union(geom), buffer_dist)
+    req_bbox <- st_bbox(st_transform(geom, prj))
 
-  if (!is.null(geom)) {
-    # intersect in projection of geometry
-    sf_points_filter <- st_intersection(
-      st_transform(sf_points, st_crs(geom)),
-      st_buffer(st_union(geom), buffer_dist))
+    # Grab stuff in bounding box.
+    X_inds <- which(X_coords > req_bbox$xmin & X_coords < req_bbox$xmax)
+    Y_inds <- which(Y_coords > req_bbox$ymin & Y_coords < req_bbox$ymax)
+    X_coords <- X_coords[X_inds]
+    Y_coords <- Y_coords[Y_inds]
 
-    # grab all the X and Ys needed.
-    sf_points <- filter(sf_points,
-                          X_ind >= min(sf_points_filter$X_ind) &
-                          X_ind <= max(sf_points_filter$X_ind) &
-                          Y_ind >= min(sf_points_filter$Y_ind) &
-                          Y_ind <= max(sf_points_filter$Y_ind))
+    sf_points <- construct_points(X_coords, Y_coords, X_inds, Y_inds, prj)
+
+  } else {
+    sf_points <- construct_points(X_coords, Y_coords, prj = prj)
   }
-
-  X_coords <- X_coords[min(sf_points$X_ind):max(sf_points$X_ind)]
-  Y_coords <- Y_coords[min(sf_points$Y_ind):max(sf_points$Y_ind)]
 
   sf_polygons <- get_ids(length(X_coords), length(Y_coords))
   dim(sf_polygons) <- c(x = length(X_coords), y = length(Y_coords))
@@ -105,15 +102,21 @@ create_cell_geometry <- function(X_coords, Y_coords, prj, geom = NULL, buffer_di
   return(sf_polygons)
 }
 
-construct_points <- function(x, y, prj) {
+construct_points <- function(x, y, x_ind = NULL, y_ind = NULL, prj) {
   x_vals <- matrix(x, nrow = length(y), ncol = length(x),
                    byrow = T)
   y_vals <- matrix(y, nrow = length(y), ncol = length(x),
                    byrow = F)
-  X_ind <- matrix(rep(c(1:ncol(x_vals)), nrow(x_vals)),
+
+  if(is.null(x_ind)) {
+    x_ind <- c(1:ncol(x_vals))
+    y_ind <- c(1:nrow(x_vals))
+  }
+
+  X_ind <- matrix(rep(x_ind, nrow(x_vals)),
                   nrow = nrow(x_vals), ncol = ncol(x_vals),
                   byrow = TRUE)
-  Y_ind <- matrix(rep(c(1:nrow(x_vals)), ncol(x_vals)),
+  Y_ind <- matrix(rep(y_ind, ncol(x_vals)),
                   nrow = nrow(x_vals), ncol = ncol(x_vals),
                   byrow = FALSE)
 

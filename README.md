@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/USGS-R/intersectr.svg?branch=master)](https://travis-ci.org/USGS-R/intersectr) [![Coverage Status](https://coveralls.io/repos/github/USGS-R/intersectr/badge.svg?branch=master)](https://coveralls.io/github/USGS-R/intersectr?branch=master)
+
 # intersectr
 
 `intersectr` is an in development package for intersecting spatial attribute data. The primary emphasis is on gridded time-series data such as meteorological forcings that need to be intersected with a spatial modeling mesh or set of spatial modeling units.

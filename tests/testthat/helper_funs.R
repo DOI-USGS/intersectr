@@ -51,7 +51,7 @@ write_incremental <- function(file_handle,
     RNetCDF::var.put.nc(file_handle, "time", time_step, step, 1)
 
     RNetCDF::var.put.nc(file_handle, var_meta$name,
-                        as.numeric(timestep_data[2:length(timestep_data)]),
+                        timestep_data[[2]],
                         start = c(NA, step), count = c(NA, 1))
     return(invisible(file_handle))
   }

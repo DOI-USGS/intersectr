@@ -71,6 +71,10 @@ create_cell_geometry <- function(X_coords, Y_coords, prj, geom = NULL, buffer_di
     # Grab stuff in bounding box.
     X_inds <- which(X_coords > req_bbox$xmin & X_coords < req_bbox$xmax)
     Y_inds <- which(Y_coords > req_bbox$ymin & Y_coords < req_bbox$ymax)
+
+    if(length(X_inds) == 0 | length(Y_inds) == 0)
+      stop("Data and geometry not found to intersect. Check projection?")
+
     X_coords <- X_coords[X_inds]
     Y_coords <- Y_coords[Y_inds]
 

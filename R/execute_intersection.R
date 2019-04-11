@@ -103,8 +103,11 @@ execute_intersection <- function(nc_file,
   Y_var_info <- var.inq.nc(nc, y_var)
   T_var_info <- var.inq.nc(nc, t_var)
 
-  if (X_var_info$ndims > 1 | Y_var_info$ndims > 1 | T_var_info$ndims > 1)
-    stop("only 1d coordinate variables supported")
+  two_d <- FALSE
+  if (X_var_info$ndims > 1 | Y_var_info$ndims > 1 | T_var_info$ndims > 1) {
+    warning("2d coordinate variable found. Caution, limited testing.")
+    two_d <- TRUE
+  }
 
   time_steps <- utcal.nc(att.get.nc(nc, T_var_info$name, "units"),
                          var.get.nc(nc, T_var_info$name, unpack = TRUE),
@@ -163,11 +166,16 @@ execute_intersection <- function(nc_file,
       out <- matrix(0, nrow = out_nrows, ncol = out_ncols)
     }
 
-    dimid_order <- match(nc_var_info$dimids,
-                         c(X_var_info$dimids,
-                           Y_var_info$dimids,
-                           T_var_info$dimids))
+    if(two_d) {
+      warning("assuming dimension order")
+      dimid_order <- c(1,2,3)
+    } else {
+      dimid_order <- match(nc_var_info$dimids,
+                           c(X_var_info$dimids,
+                             Y_var_info$dimids,
+                             T_var_info$dimids))
 
+    }
     transpose <- FALSE
     if(dimid_order[1] > dimid_order[2]) transpose <- TRUE
 

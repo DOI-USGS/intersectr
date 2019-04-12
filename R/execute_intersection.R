@@ -168,7 +168,9 @@ execute_intersection <- function(nc_file,
 
     if(two_d) {
       warning("assuming dimension order")
-      dimid_order <- c(1,2,3)
+      dimid_order <- match(nc_var_info$dimids,
+                           c(X_var_info$dimids,
+                             T_var_info$dimids))
     } else {
       dimid_order <- match(nc_var_info$dimids,
                            c(X_var_info$dimids,

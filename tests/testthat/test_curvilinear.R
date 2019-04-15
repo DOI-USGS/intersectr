@@ -28,12 +28,12 @@ test_that("curvilinear", {
   cell_geometry <- suppressWarnings(
     create_cell_geometry(x, y, in_prj, geom))
 
-  expect(nrow(cell_geometry) == 3420)
+  expect(nrow(cell_geometry) == 340)
 
   cell_geometry <- suppressWarnings(
     create_cell_geometry(x, y, in_prj, geom, 10000))
 
-  expect(nrow(cell_geometry) == 3666)
+  expect(nrow(cell_geometry) == 700)
 
   data_source_cells <- st_sf(select(cell_geometry, grid_ids))
   target_polygons <- st_sf(select(geom, CNTY_ID))

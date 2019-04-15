@@ -66,8 +66,10 @@ create_cell_geometry <- function(X_coords, Y_coords, prj, geom = NULL, buffer_di
       X_inds <- which(X_coords > req_bbox$xmin & X_coords < req_bbox$xmax, arr.ind = TRUE)
       Y_inds <- which(Y_coords > req_bbox$ymin & Y_coords < req_bbox$ymax, arr.ind = TRUE)
 
-      X_inds <- seq(min(X_inds[, 1]), max(X_inds[, 1]), 1)
-      Y_inds <- seq(min(Y_inds[, 2]), max(Y_inds[, 2]), 1)
+      matches <- dplyr::intersect(as.data.frame(X_inds), as.data.frame(Y_inds))
+
+      X_inds <- seq(min(matches[, 1]), max(matches[, 1]), 1)
+      Y_inds <- seq(min(matches[, 2]), max(matches[, 2]), 1)
 
       X_coords <- X_coords[X_inds, Y_inds]
       Y_coords <- Y_coords[X_inds, Y_inds]
@@ -155,12 +157,22 @@ construct_points <- function(x, y, x_ind = NULL, y_ind = NULL, prj, array_mode) 
     }
   }
 
-  X_ind <- matrix(rep(x_ind, nrow(x_vals)),
-                  nrow = nrow(x_vals), ncol = ncol(x_vals),
-                  byrow = TRUE)
-  Y_ind <- matrix(rep(y_ind, ncol(x_vals)),
-                  nrow = nrow(x_vals), ncol = ncol(x_vals),
-                  byrow = FALSE)
+  if(length(x_ind) == nrow(x_vals)) {
+    warning("Rows and columns flipped? Check output for valid indices.")
+    X_ind <- matrix(rep(x_ind, ncol(x_vals)),
+                    nrow = ncol(x_vals), ncol = nrow(x_vals),
+                    byrow = TRUE)
+    Y_ind <- matrix(rep(y_ind, nrow(x_vals)),
+                    nrow = ncol(x_vals), ncol = nrow(x_vals),
+                    byrow = FALSE)
+  } else {
+    X_ind <- matrix(rep(x_ind, nrow(x_vals)),
+                    nrow = nrow(x_vals), ncol = ncol(x_vals),
+                    byrow = TRUE)
+    Y_ind <- matrix(rep(y_ind, ncol(x_vals)),
+                    nrow = nrow(x_vals), ncol = ncol(x_vals),
+                    byrow = FALSE)
+  }
 
   sf_points <- st_as_sf(data.frame(x = matrix(x_vals, ncol = 1),
                                    y = matrix(y_vals, ncol = 1),

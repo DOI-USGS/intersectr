@@ -1,7 +1,7 @@
 Package: intersectr
 Type: Package
 Title: Spatiotemporal Intersections
-Version: 0.0.1
+Version: 0.0.2
 Authors@R: person("David", "Blodgett", role = c("aut", "cre"), email = "dblodgett@usgs.gov")
 Depends:
     R (>= 3.0)

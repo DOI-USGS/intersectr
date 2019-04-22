@@ -9,8 +9,8 @@
 #' \link[areal]{aw_intersect} \link[areal]{aw_total} and \link[areal]{aw_weight}
 #' from the \href{https://github.com/slu-openGIS/areal}{areal package}.
 #'
-#' @param x sf data.frame including one geometry column and one identifier column
-#' @param y sf data.frame including one geometry column and one identifier column
+#' @param x sf data.frame source features including one geometry column and one identifier column
+#' @param y sf data.frame target features including one geometry column and one identifier column
 #'
 #' @return data.frame containing fraction of each feature in x that is
 #' covered by each feature in y. e.g. If a feature from x is entirely within a feature in y,

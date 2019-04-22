@@ -7,9 +7,9 @@
 calculate_area_intersection_weights(x, y)
 }
 \arguments{
-\item{x}{sf data.frame including one geometry column and one identifier column}
+\item{x}{sf data.frame source features including one geometry column and one identifier column}
 
-\item{y}{sf data.frame including one geometry column and one identifier column}
+\item{y}{sf data.frame target features including one geometry column and one identifier column}
 }
 \value{
 data.frame containing fraction of each feature in x that is

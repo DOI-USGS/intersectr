@@ -5,7 +5,7 @@
 \title{Create Cell Geometry}
 \usage{
 create_cell_geometry(X_coords, Y_coords, prj, geom = NULL,
-  buffer_dist = 0)
+  buffer_dist = 0, regularize = FALSE, eps = 1e-10)
 }
 \arguments{
 \item{X_coords}{numeric center positions of X axis indices}
@@ -16,7 +16,12 @@ create_cell_geometry(X_coords, Y_coords, prj, geom = NULL,
 
 \item{geom}{sf data.frame with geometry that cell geometry should cover}
 
-\item{buffer_dist}{a distance to buffer the cell geometry in units of geom projection}
+\item{buffer_dist}{numeric a distance to buffer the cell geometry in units of geom projection}
+
+\item{regularize}{boolean if TRUE, grid spacing will be adjusted to be exactly
+equal. Only applies to 1-d coordinates.}
+
+\item{eps}{numeric sets tolerance for grid regularity.}
 }
 \description{
 Creates cell geometry from vectors of X and Y positions.

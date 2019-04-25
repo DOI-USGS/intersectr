@@ -55,3 +55,14 @@ test_that("daymet_subset", {
 
   expect(st_crs(cells) == st_crs(prj))
 })
+
+test_that("crossing the date line works", {
+  nc <- open.nc("data/flxf06.gdas.1979.grb2.nc")
+  x <- var.get.nc(nc, "lon")
+  y <- var.get.nc(nc, "lat")
+  close.nc(nc)
+  warn <- capture_warnings(cells <- create_cell_geometry(x, y, 4326, regularize = TRUE))
+  expect_equal(nrow(cells), 17440)
+  expect("Found longitude greater than 180. Converting to -180, 180" %in% warn)
+  expect("Data crosses international date line or only one irregular." %in% warn)
+})

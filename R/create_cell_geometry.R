@@ -6,7 +6,10 @@
 #' @param Y_coords numeric center positions of Y axis indices
 #' @param prj character proj4 string for x and y
 #' @param geom sf data.frame with geometry that cell geometry should cover
-#' @param buffer_dist a distance to buffer the cell geometry in units of geom projection
+#' @param buffer_dist numeric a distance to buffer the cell geometry in units of geom projection
+#' @param regularize boolean if TRUE, grid spacing will be adjusted to be exactly
+#' equal. Only applies to 1-d coordinates.
+#' @param eps numeric sets tolerance for grid regularity.
 #'
 #' @details Intersection is performed with cell centers then geometry is constructed.
 #' A buffer may be required to fully cover geometry with cells.
@@ -35,22 +38,32 @@
 #' plot(sf::st_geometry(cell_geometry), lwd = 0.25)
 #' plot(sf::st_transform(sf::st_geometry(geom), prj), add = TRUE)
 #'
-create_cell_geometry <- function(X_coords, Y_coords, prj, geom = NULL, buffer_dist = 0) {
+create_cell_geometry <- function(X_coords, Y_coords, prj,
+                                 geom = NULL, buffer_dist = 0,
+                                 regularize = FALSE, eps = 1e-10) {
 
   X_ind <- Y_ind <- NULL
 
   if (!is.array(X_coords) || length(dim(X_coords)) == 1) {
     array_mode <- FALSE
 
-    # cell size
-    dif_dist_x <- diff(X_coords)
-    dif_dist_y <- diff(Y_coords)
-
-    if (any(diff(dif_dist_x) > 1e-10) | any(diff(dif_dist_y) > 1e-10)) {
-      stop("only regular rasters or curvilinear grids supported")
+    if(grepl("+longlat", st_crs(prj)$proj4string)) {
+      lonlat <- TRUE
+      if(any(X_coords > 180)) {
+        warning("Found longitude greater than 180. Converting to -180, 180")
+        X_coords[X_coords > 180] <- X_coords[X_coords > 180] - 360
+      }
     } else {
-      dif_dist_x <- mean(dif_dist_x)
-      dif_dist_y <- mean(dif_dist_y)
+      lonlat <- FALSE
+    }
+
+    if (!check_regular(X_coords, eps) | !check_regular(Y_coords, eps)) {
+      if(regularize) {
+        X_coords <- make_regular(X_coords, lonlat)
+        Y_coords <- make_regular(Y_coords, lonlat)
+      } else {
+        stop("Found irregular grid. Only regular rasters or curvilinear grids supported")
+      }
     }
 
   } else {
@@ -198,4 +211,38 @@ get_ids <- function(X_dim_size, Y_dim_size) {
   matrix(as.numeric(seq(1, X_dim_size * Y_dim_size)),
          nrow = X_dim_size, ncol = Y_dim_size,
          byrow = FALSE)
+}
+
+which_within <- function(d, digits = 4) {
+  abs(round(d - mean(d[1], d[length(d)]), digits))
+}
+
+check_regular <- function(x, eps = 1e-4) {
+  d <- diff(x)
+  # Deal with date line.
+  cd <- which_within(d, round(-(log(eps, base = 10))))
+  if(sum(cd > 0) == 0) return(TRUE)
+  else if(sum(cd > 0) == 1) {
+    warning("Data crosses international date line or only one irregular.")
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
+}
+
+make_regular <- function(x, lonlat) {
+  if(lonlat) check <- which_within(diff(x))
+  if(lonlat & sum(check > 0) == 1) {
+      break_ind <- which(check > 0)
+      return(c(seq(from = x[1],
+                   to = x[break_ind],
+                   length.out = break_ind),
+               seq(from = x[(break_ind + 1)],
+                   to = x[length(x)],
+                   length.out = length(x) - break_ind)))
+  } else {
+    return(seq(from = x[1],
+               to = x[length(x)],
+               along.with = x))
+  }
 }

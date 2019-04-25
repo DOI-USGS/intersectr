@@ -63,7 +63,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">intersectr</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="In-development version">0.0.1</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="In-development version">0.0.2</span>
       </span>
     </div>
 
@@ -129,7 +129,7 @@
     </div>
 
     <pre class="usage"><span class='fu'>create_cell_geometry</span>(<span class='no'>X_coords</span>, <span class='no'>Y_coords</span>, <span class='no'>prj</span>, <span class='kw'>geom</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-  <span class='kw'>buffer_dist</span> <span class='kw'>=</span> <span class='fl'>0</span>)</pre>
+  <span class='kw'>buffer_dist</span> <span class='kw'>=</span> <span class='fl'>0</span>, <span class='kw'>regularize</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='kw'>eps</span> <span class='kw'>=</span> <span class='fl'>1e-10</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -152,7 +152,16 @@
     </tr>
     <tr>
       <th>buffer_dist</th>
-      <td><p>a distance to buffer the cell geometry in units of geom projection</p></td>
+      <td><p>numeric a distance to buffer the cell geometry in units of geom projection</p></td>
+    </tr>
+    <tr>
+      <th>regularize</th>
+      <td><p>boolean if TRUE, grid spacing will be adjusted to be exactly
+equal. Only applies to 1-d coordinates.</p></td>
+    </tr>
+    <tr>
+      <th>eps</th>
+      <td><p>numeric sets tolerance for grid regularity.</p></td>
     </tr>
     </table>
     

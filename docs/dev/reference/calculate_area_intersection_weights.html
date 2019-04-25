@@ -70,7 +70,7 @@ from the areal package." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">intersectr</a>
-        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="In-development version">0.0.1</span>
+        <span class="version label label-danger" data-toggle="tooltip" data-placement="bottom" title="In-development version">0.0.2</span>
       </span>
     </div>
 
@@ -149,11 +149,11 @@ from the <a href='https://github.com/slu-openGIS/areal'>areal package</a>.</p>
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>x</th>
-      <td><p>sf data.frame including one geometry column and one identifier column</p></td>
+      <td><p>sf data.frame source features including one geometry column and one identifier column</p></td>
     </tr>
     <tr>
       <th>y</th>
-      <td><p>sf data.frame including one geometry column and one identifier column</p></td>
+      <td><p>sf data.frame target features including one geometry column and one identifier column</p></td>
     </tr>
     </table>
     
@@ -185,8 +185,8 @@ will be two rows, one for each x/y pair of features with w = 0.5 in each.</p>
 
 <span class='kw pkg'>sf</span><span class='kw ns'>::</span><span class='fu'><a href='https://www.rdocumentation.org/packages/sf/topics/st_agr'>st_agr</a></span>(<span class='no'>a</span>) <span class='kw'>&lt;-</span> <span class='kw pkg'>sf</span><span class='kw ns'>::</span><span class='fu'><a href='https://www.rdocumentation.org/packages/sf/topics/st_agr'>st_agr</a></span>(<span class='no'>b</span>) <span class='kw'>&lt;-</span> <span class='st'>"constant"</span>
 
-<span class='no'>a_b</span> <span class='kw'>&lt;-</span> <span class='fu'>calculate_area_intersection_weights</span>(<span class='no'>a</span>, <span class='no'>b</span>)</div><div class='output co'>#&gt; <span class='warning'>Warning: x is already of type POLYGON.</span></div><div class='input'><span class='no'>b_a</span> <span class='kw'>&lt;-</span> <span class='fu'>calculate_area_intersection_weights</span>(<span class='no'>b</span>, <span class='no'>a</span>)</div><div class='output co'>#&gt; <span class='warning'>Warning: x is already of type POLYGON.</span></div><div class='input'>
-</div></pre>
+<span class='no'>a_b</span> <span class='kw'>&lt;-</span> <span class='fu'>calculate_area_intersection_weights</span>(<span class='no'>a</span>, <span class='no'>b</span>)
+<span class='no'>b_a</span> <span class='kw'>&lt;-</span> <span class='fu'>calculate_area_intersection_weights</span>(<span class='no'>b</span>, <span class='no'>a</span>)</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="sidebar">
     <h2>Contents</h2>

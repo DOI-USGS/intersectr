@@ -47,26 +47,19 @@ While very small, some of the row coordinates spacings are big enough to be inte
 The create_cell_geometry function generates an `sf` `data.frame` representing each cell from the dataset as a polygon with a unique id.
 ```{r cells}
 (nc_prj <- ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc_file)))
-# Small diffs
+
 nc <- RNetCDF::open.nc(nc_file)
 X_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$X, unpack = TRUE)
-max(diff(diff(X_coords)))
-X_coords <- seq(from = X_coords[1],
-                  to = X_coords[length(X_coords)],
-                  along.with = X_coords)
-max(diff(diff(X_coords)))
 Y_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE)
-max(diff(diff(Y_coords)))
-Y_coords <- seq(from = Y_coords[1],
-                  to = Y_coords[length(Y_coords)],
-                  along.with = Y_coords)
-max(diff(diff(X_coords)))
+
 (cell_geometry <-
     create_cell_geometry(X_coords = X_coords,
                          Y_coords = Y_coords,
                          prj = nc_prj,
                          geom = geom, 
-                         buffer_dist = 10000))
+                         buffer_dist = 10000,
+                         regularize = TRUE))
+
 plot(sf::st_geometry(sf::st_transform(cell_geometry, 
                                       sf::st_crs(geom))), lwd = 0.2)
 plot(sf::st_geometry(geom), add = TRUE)

@@ -245,7 +245,7 @@ make_regular <- function(x, lonlat) {
 #' @importFrom sf st_polygon st_sfc st_union st_convex_hull st_coordinates
 make_zero_360 <- function(geom) {
   prj <- st_crs(geom)
-  geom <- st_convex_hull(st_union(st_transform(geom, 32601)))
+  geom <- st_convex_hull(st_union(st_transform(geom, 3832)))
   coords <- st_coordinates(st_transform(geom, prj))
 
   x <- coords[, 1]

@@ -44,17 +44,22 @@ create_cell_geometry <- function(X_coords, Y_coords, prj,
 
   X_ind <- Y_ind <- NULL
 
+  lonlat <- st_crs(prj)$proj == "longlat"
+
   if (!is.array(X_coords) || length(dim(X_coords)) == 1) {
     array_mode <- FALSE
 
-    if(grepl("+longlat", st_crs(prj)$proj4string)) {
-      lonlat <- TRUE
-      if(any(X_coords > 180)) {
-        warning("Found longitude greater than 180. Converting to -180, 180")
-        X_coords[X_coords > 180] <- X_coords[X_coords > 180] - 360
+    if(lonlat & any(X_coords > 180)) {
+      warning("Found longitude greater than 180. Converting to -180, 180")
+      X_coords[X_coords > 180] <- X_coords[X_coords > 180] - 360
+    }
+
+    if(lonlat & min(X_coords) < -170) {
+      warning("Found longidude near international date line. Using 0-360 longitude.")
+      X_coords[X_coords < 0] <- X_coords[X_coords < 0] + 360
+      if(!is.null(geom)) {
+        geom <- make_zero_360(geom)
       }
-    } else {
-      lonlat <- FALSE
     }
 
     if (!check_regular(X_coords, eps) | !check_regular(Y_coords, eps)) {
@@ -100,7 +105,6 @@ create_cell_geometry <- function(X_coords, Y_coords, prj,
     }
 
     sf_points <- construct_points(X_coords, Y_coords, X_inds, Y_inds, prj, array_mode = array_mode)
-
   } else {
     sf_points <- construct_points(X_coords, Y_coords, prj = prj, array_mode = array_mode)
   }
@@ -221,9 +225,7 @@ check_regular <- function(x, eps = 1e-4) {
   d <- diff(x)
   # Deal with date line.
   cd <- which_within(d, round(-(log(eps, base = 10))))
-  if(sum(cd > 0) == 0) return(TRUE)
-  else if(sum(cd > 0) == 1) {
-    warning("Data crosses international date line or only one irregular.")
+  if(sum(cd > 0) == 0) {
     return(TRUE)
   } else {
     return(FALSE)
@@ -231,18 +233,19 @@ check_regular <- function(x, eps = 1e-4) {
 }
 
 make_regular <- function(x, lonlat) {
-  if(lonlat) check <- which_within(diff(x))
-  if(lonlat & sum(check > 0) == 1) {
-      break_ind <- which(check > 0)
-      return(c(seq(from = x[1],
-                   to = x[break_ind],
-                   length.out = break_ind),
-               seq(from = x[(break_ind + 1)],
-                   to = x[length(x)],
-                   length.out = length(x) - break_ind)))
-  } else {
-    return(seq(from = x[1],
-               to = x[length(x)],
-               along.with = x))
-  }
+  return(seq(from = x[1],
+             to = x[length(x)],
+             along.with = x))
+}
+
+#' @importFrom sf st_polygon st_sfc st_union st_convex_hull st_coordinates
+make_zero_360 <- function(geom) {
+  coords <- st_coordinates(st_convex_hull(st_union(geom)))
+
+  x <- coords[, 1]
+  x[x < 0] <- x[x < 0] + 360
+
+  coords[, 1] <- x
+
+  st_sfc(st_polygon(list(coords[, c(1:2)])), crs = st_crs(geom))
 }

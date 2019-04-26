@@ -11,7 +11,8 @@
 #'
 #' @param x sf data.frame source features including one geometry column and one identifier column
 #' @param y sf data.frame target features including one geometry column and one identifier column
-#'
+#' @param allow_lonlat boolean If FALSE (the default) lon/lat target features are not allowed.
+#' Intersections in lon/lat are generally not valid and problematic at the international date line.
 #' @return data.frame containing fraction of each feature in x that is
 #' covered by each feature in y. e.g. If a feature from x is entirely within a feature in y,
 #' w will be 1. If a feature from x is 50% in one feature for y and 50% in another, there
@@ -46,10 +47,14 @@
 #' @importFrom sf st_intersection st_set_geometry st_area st_crs
 #' @importFrom dplyr mutate group_by right_join select ungroup
 
-calculate_area_intersection_weights <- function(x, y) {
+calculate_area_intersection_weights <- function(x, y, allow_lonlat = FALSE) {
 
   if (st_crs(x) != st_crs(y)) {
     x <- st_transform(x, st_crs(y))
+  }
+
+  if(st_crs(y)$proj == "longlat" & !allow_lonlat) {
+    stop("Found lon/lat coordinates and allow_lonlat is FALSE.")
   }
 
   # Standard evaluation is for chumps.

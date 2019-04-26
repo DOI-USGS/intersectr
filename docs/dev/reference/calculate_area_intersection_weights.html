@@ -142,7 +142,7 @@ from the <a href='https://github.com/slu-openGIS/areal'>areal package</a>.</p>
     
     </div>
 
-    <pre class="usage"><span class='fu'>calculate_area_intersection_weights</span>(<span class='no'>x</span>, <span class='no'>y</span>)</pre>
+    <pre class="usage"><span class='fu'>calculate_area_intersection_weights</span>(<span class='no'>x</span>, <span class='no'>y</span>, <span class='kw'>allow_lonlat</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
     
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -154,6 +154,11 @@ from the <a href='https://github.com/slu-openGIS/areal'>areal package</a>.</p>
     <tr>
       <th>y</th>
       <td><p>sf data.frame target features including one geometry column and one identifier column</p></td>
+    </tr>
+    <tr>
+      <th>allow_lonlat</th>
+      <td><p>boolean If FALSE (the default) lon/lat target features are not allowed.
+Intersections in lon/lat are generally not valid and problematic at the international date line.</p></td>
     </tr>
     </table>
     

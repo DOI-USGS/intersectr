@@ -44,7 +44,7 @@ create_cell_geometry <- function(X_coords, Y_coords, prj,
 
   X_ind <- Y_ind <- NULL
 
-  lonlat <- grepl("+longlat", st_crs(prj)$proj4string)
+  lonlat <- st_crs(prj)$proj == "longlat"
 
   if (!is.array(X_coords) || length(dim(X_coords)) == 1) {
     array_mode <- FALSE
@@ -225,9 +225,7 @@ check_regular <- function(x, eps = 1e-4) {
   d <- diff(x)
   # Deal with date line.
   cd <- which_within(d, round(-(log(eps, base = 10))))
-  if(sum(cd > 0) == 0) return(TRUE)
-  else if(sum(cd > 0) == 1) {
-    warning("Data crosses international date line or only one irregular.")
+  if(sum(cd > 0) == 0) {
     return(TRUE)
   } else {
     return(FALSE)
@@ -235,20 +233,9 @@ check_regular <- function(x, eps = 1e-4) {
 }
 
 make_regular <- function(x, lonlat) {
-  if(lonlat) check <- which_within(diff(x))
-  if(lonlat & sum(check > 0) == 1) {
-    break_ind <- which(check > 0)
-    return(c(seq(from = x[1],
-                 to = x[break_ind],
-                 length.out = break_ind),
-             seq(from = x[(break_ind + 1)],
-                 to = x[length(x)],
-                 length.out = length(x) - break_ind)))
-  } else {
-    return(seq(from = x[1],
-               to = x[length(x)],
-               along.with = x))
-  }
+  return(seq(from = x[1],
+             to = x[length(x)],
+             along.with = x))
 }
 
 #' @importFrom sf st_polygon st_sfc st_union st_convex_hull st_coordinates

@@ -4,12 +4,15 @@
 \alias{calculate_area_intersection_weights}
 \title{Area Weighted Intersection (areal implementation)}
 \usage{
-calculate_area_intersection_weights(x, y)
+calculate_area_intersection_weights(x, y, allow_lonlat = FALSE)
 }
 \arguments{
 \item{x}{sf data.frame source features including one geometry column and one identifier column}
 
 \item{y}{sf data.frame target features including one geometry column and one identifier column}
+
+\item{allow_lonlat}{boolean If FALSE (the default) lon/lat target features are not allowed.
+Intersections in lon/lat are generally not valid and problematic at the international date line.}
 }
 \value{
 data.frame containing fraction of each feature in x that is

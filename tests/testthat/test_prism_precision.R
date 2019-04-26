@@ -35,9 +35,14 @@ test_precise <- function(nc_file, variable_name) {
   sf::st_agr(data_source_cells) <- "constant"
   sf::st_agr(target_polygons) <- "constant"
 
+  expect_error(area_weights <- calculate_area_intersection_weights(
+    data_source_cells,
+    target_polygons), "Found lon/lat coordinates and allow_lonlat is FALSE.")
+
   area_weights <- calculate_area_intersection_weights(
     data_source_cells,
-    target_polygons)
+    target_polygons,
+    allow_lonlat = TRUE)
 
   intersected <- execute_intersection(nc_file,
                                       variable_name,

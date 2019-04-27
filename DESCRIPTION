@@ -13,7 +13,6 @@ BugReports: https://github.com/USGS-R/intersectr/issues
 Imports: sf, stars, dplyr, RNetCDF, ncmeta, areal, data.table, ncdfgeom, rgdal
 Remotes: USGS-R/ncdfgeom, slu-openGIS/areal@v0.1.3
 Suggests: testthat, tibble, knitr, rmarkdown
-VignetteBuilder: knitr
 License: CC0
 Encoding: UTF-8
 LazyData: true

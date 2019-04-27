@@ -42,8 +42,8 @@ create_cell_geometry <- function(X_coords, Y_coords, prj,
                                  geom = NULL, buffer_dist = 0,
                                  regularize = FALSE, eps = 1e-10) {
 
-  X_ind <- Y_ind <- NULL
-
+  x_ind <- y_ind <- NULL
+  dateline <- FALSE
   lonlat <- st_crs(prj)$proj == "longlat"
 
   if (!is.array(X_coords) || length(dim(X_coords)) == 1) {
@@ -58,8 +58,10 @@ create_cell_geometry <- function(X_coords, Y_coords, prj,
       warning("Found longidude near international date line. Using 0-360 longitude.")
       X_coords[X_coords < 0] <- X_coords[X_coords < 0] + 360
       if(!is.null(geom)) {
+        geom <- st_transform(geom, prj)
         geom <- make_zero_360(geom)
       }
+      dateline <- TRUE
     }
 
     if (!check_regular(X_coords, eps) | !check_regular(Y_coords, eps)) {
@@ -77,7 +79,9 @@ create_cell_geometry <- function(X_coords, Y_coords, prj,
 
   if(!is.null(geom)) {
     geom <- st_buffer(st_union(geom), buffer_dist)
-    req_bbox <- st_bbox(st_transform(geom, prj))
+    if(!dateline) geom <- st_transform(geom, prj)
+
+    req_bbox <- st_bbox(geom)
 
     if(array_mode) {
       warning("Found curvilinear grid, caution, limited testing.")
@@ -240,7 +244,9 @@ make_regular <- function(x, lonlat) {
 
 #' @importFrom sf st_polygon st_sfc st_union st_convex_hull st_coordinates
 make_zero_360 <- function(geom) {
-  coords <- st_coordinates(st_convex_hull(st_union(geom)))
+  prj <- st_crs(geom)
+  geom <- st_convex_hull(st_union(st_transform(geom, 3832)))
+  coords <- st_coordinates(st_transform(geom, prj))
 
   x <- coords[, 1]
   x[x < 0] <- x[x < 0] + 360

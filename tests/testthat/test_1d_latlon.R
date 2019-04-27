@@ -60,25 +60,33 @@ test_that("1d lat/lon", {
 
   expect(nrow(intersected) == 2)
 
-  unlink("test.nc")
+  tf <- tempfile()
 
-  expect_warning(out_f <- write_ncdf(nc_file = "test.nc", int_data = intersected,
+  expect_warning(out_f <- write_ncdf(nc_file = tf, int_data = intersected,
                       variable_name = "test_varname", variable_units = "test_varunits"),
                  "inserting fake latitude and longitude values")
 
-  expect(file.exists("test.nc"))
+  expect(file.exists(tf))
 
-  unlink("test.nc")
+  unlink(tf)
 
   test_file <- execute_intersection(nc_file, variable_name, area_weights,
                        cell_geometry, x_var, y_var, t_var,
                        writer_fun = write_incremental,
-                       out_file = "test.nc",
+                       out_file = tf,
                        out_var_meta = list(name = "test",
                                            long_name = "long_test",
                                            units = "mm"))
-  expect(file.exists("test.nc"))
+  expect(file.exists(tf))
 
-  unlink("test.nc")
+  unlink(tf)
+
+  dap <- intersectr:::get_dap_url(min(cell_geometry$X_ind), max(cell_geometry$X_ind),
+                                  min(cell_geometry$Y_ind), max(cell_geometry$Y_ind),
+                                  nc_file, variable_name, x_var, y_var, t_var,
+                                  start_datetime = "2018-09-13 00:00:00",
+                                  end_datetime = "2018-09-14 00:00:00")
+
+  expect(grepl("metdata.nc\\?lon\\[316:336\\],lat\\[73:82\\],day\\[2:3\\],precipitation_amount\\[2:3\\]\\[73:82\\]\\[316:336\\]", dap))
 
 })

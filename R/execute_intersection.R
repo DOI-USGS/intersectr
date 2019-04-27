@@ -95,65 +95,21 @@ execute_intersection <- function(nc_file,
   intersection_weights <- dplyr::filter(intersection_weights, !is.na(poly_id))
 
   nc <- open.nc(nc_file)
-  nc_var_info <- var.inq.nc(nc, variable_name)
+  on.exit(close.nc(nc), add = TRUE)
 
-  if (nc_var_info$ndims != 3) stop("only 3d variables are supported")
-
-  X_var_info <- var.inq.nc(nc, x_var)
-  Y_var_info <- var.inq.nc(nc, y_var)
-  T_var_info <- var.inq.nc(nc, t_var)
-
-  two_d <- FALSE
-  if (X_var_info$ndims > 1 | Y_var_info$ndims > 1 | T_var_info$ndims > 1) {
-    warning("2d coordinate variable found. Caution, limited testing.")
-    two_d <- TRUE
-  }
-
-  time_steps <- utcal.nc(att.get.nc(nc, T_var_info$name, "units"),
-                         var.get.nc(nc, T_var_info$name, unpack = TRUE),
-                         "c")
-  time_steps <- data.frame(time_stamp = time_steps)
-
-  X_inds <- seq(min(cell_geometry$X_ind), max(cell_geometry$X_ind), 1)
-  Y_inds <- seq(min(cell_geometry$Y_ind), max(cell_geometry$Y_ind), 1)
+  ri <- get_request_inds(min(cell_geometry$X_ind), max(cell_geometry$X_ind),
+                         min(cell_geometry$Y_ind), max(cell_geometry$Y_ind),
+                         nc, variable_name, x_var, y_var,
+                         t_var, start_datetime, end_datetime)
 
   rm(cell_geometry)
 
-  ids <- as.integer(matrix(get_ids(length(X_inds), length(Y_inds)),
+  ids <- as.integer(matrix(get_ids(length(ri$X), length(ri$Y)),
                            ncol = 1,
                            byrow = FALSE))
 
-  if (is.null(start_datetime) & is.null(end_datetime)) {
+  out_nrows <- length(ri$T)
 
-    out_nrows <- nrow(time_steps)
-
-    t_inds <- seq_len(out_nrows)
-
-  } else {
-
-    if (is.null(start_datetime)) start_datetime <- time_steps[1]
-    if (is.character(start_datetime)) {
-      start_datetime <- strptime(start_datetime,
-                                 format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
-    }
-    if (is.character(end_datetime)) {
-      end_datetime <- strptime(end_datetime,
-                               format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
-    }
-
-    t_inds <- time_steps$time_stamp >= start_datetime &
-      time_steps$time_stamp <= end_datetime
-
-    time_steps <- filter(time_steps, t_inds)
-
-    t_inds <- which(t_inds)
-
-    out_nrows <- length(t_inds)
-
-    if(out_nrows == 0) {
-      stop("No time steps intersect start and stop datetimes.")
-    }
-  }
     out_ncols <- length(unique(intersection_weights[, 2][[1]]))
 
     out_names <- unique(intersection_weights$poly_id)
@@ -166,20 +122,8 @@ execute_intersection <- function(nc_file,
       out <- matrix(0, nrow = out_nrows, ncol = out_ncols)
     }
 
-    if(two_d) {
-      warning("assuming dimension order")
-      dimid_order <- match(nc_var_info$dimids,
-                           c(X_var_info$dimids,
-                             T_var_info$dimids))
-    } else {
-      dimid_order <- match(nc_var_info$dimids,
-                           c(X_var_info$dimids,
-                             Y_var_info$dimids,
-                             T_var_info$dimids))
-
-    }
     transpose <- FALSE
-    if(dimid_order[1] > dimid_order[2]) transpose <- TRUE
+    if(ri$dimid_order[1] > ri$dimid_order[2]) transpose <- TRUE
 
     intersection_weights <- data.table(intersection_weights)
     sum_weights <- intersection_weights[, list(sw = sum(w, na.rm = TRUE)), by = poly_id]
@@ -190,10 +134,8 @@ execute_intersection <- function(nc_file,
       try_backoff({
         timer <- Sys.time()
         i_data <- var.get.nc(nc, variable_name,
-                             start = c(min(X_inds),
-                                       min(Y_inds), t_inds[i])[dimid_order],
-                             count = c(length(X_inds),
-                                       length(Y_inds), 1)[dimid_order],
+                             start = c(min(ri$X), min(ri$Y), ri$T[i])[ri$dimid_order],
+                             count = c(length(ri$X), length(ri$Y), 1)[ri$dimid_order],
                              unpack = TRUE)
 
         if(transpose) i_data <- t(i_data)
@@ -212,7 +154,7 @@ execute_intersection <- function(nc_file,
         if(!is.null(writer_fun)) {
           file_handle <- writer_fun(file_handle, step = i, size = size,
                                     var_meta = var_meta,
-                                    timestep_data = list(time_steps[i, ], i_data))
+                                    timestep_data = list(ri$time_steps[i, ], i_data))
 
         } else {
           out[i, ] <- i_data
@@ -234,7 +176,7 @@ execute_intersection <- function(nc_file,
 
       names(out) <- out_names
 
-      return(cbind(time_steps, out))
+      return(cbind(ri$time_steps, out))
     }
 }
 
@@ -280,4 +222,106 @@ try_backoff <- function(expr, silent=FALSE, max_attempts=10, verbose=FALSE) {
     }
   }
   results
+}
+
+get_request_inds <- function(min_x, max_x, min_y, max_y,
+                             nc, variable_name, x_var, y_var,
+                             t_var, start_datetime, end_datetime) {
+
+  nc_var_info <- var.inq.nc(nc, variable_name)
+
+  if (nc_var_info$ndims != 3) stop("only 3d variables are supported")
+
+  X_var_info <- var.inq.nc(nc, x_var)
+  Y_var_info <- var.inq.nc(nc, y_var)
+  T_var_info <- var.inq.nc(nc, t_var)
+
+  if (X_var_info$ndims > 1 | Y_var_info$ndims > 1 | T_var_info$ndims > 1) {
+    warning("2d coordinate variable found. Caution, limited testing.")
+    warning("assuming dimension order")
+    dimid_order <- match(nc_var_info$dimids,
+                         c(X_var_info$dimids,
+                           T_var_info$dimids))
+  } else {
+    dimid_order <- match(nc_var_info$dimids,
+                         c(X_var_info$dimids,
+                           Y_var_info$dimids,
+                           T_var_info$dimids))
+  }
+
+  time_steps <- utcal.nc(att.get.nc(nc, T_var_info$name, "units"),
+                         var.get.nc(nc, T_var_info$name, unpack = TRUE),
+                         "c")
+
+  time_steps <- data.frame(time_stamp = time_steps)
+
+  X_inds <- seq(min_x, max_x, 1)
+  Y_inds <- seq(min_y, max_y, 1)
+
+  if (is.null(start_datetime) & is.null(end_datetime)) {
+
+    T_inds <- seq_len(nrow(time_steps))
+
+  } else {
+
+    T_inds <- get_time_inds(time_steps, start_datetime, end_datetime)
+    time_steps <- time_steps[T_inds, ]
+
+  }
+
+  return(list(time_steps = time_steps, X = X_inds, Y = Y_inds, `T` = T_inds, dimid_order = dimid_order))
+
+}
+
+get_time_inds <- function(time_steps, start_datetime, end_datetime) {
+  if (is.null(start_datetime)) start_datetime <- time_steps[1]
+
+  if (is.character(start_datetime)) {
+    start_datetime <- strptime(start_datetime,
+                               format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
+  }
+
+  if (is.character(end_datetime)) {
+    end_datetime <- strptime(end_datetime,
+                             format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
+  }
+
+  T_inds <- time_steps$time_stamp >= start_datetime &
+    time_steps$time_stamp <= end_datetime
+
+  T_inds <- which(T_inds)
+
+  if(length(T_inds) == 0) {
+    stop("No time steps intersect start and stop datetimes.")
+  }
+
+  return(T_inds)
+}
+
+get_dap_url <- function(min_x, max_x, min_y, max_y,
+                        nc_file, variable_name, x_var, y_var, t_var,
+                        start_datetime, end_datetime) {
+
+  nc <- open.nc(nc_file)
+  on.exit(close.nc(nc), add = TRUE)
+
+  ri <- get_request_inds(min_x, max_x, min_y, max_y,
+                         nc, variable_name, x_var, y_var,
+                         t_var, start_datetime, end_datetime)
+
+  get_range <- function(min, max) sprintf("[%s:%s]", min, max)
+
+  X_range <- get_range(min(ri$X), max(ri$X))
+  Y_range <- get_range(min(ri$Y), max(ri$Y))
+  T_range <- get_range(min(ri$T), max(ri$T))
+
+  # OPeNDAP uses reverse order from RNetCDF so TYX here.
+  var_inds <- paste0(c(T_range, Y_range, X_range)[ri$dimid_order], collapse = "")
+
+  sprintf("%s?%s%s,%s%s,%s%s,%s%s",
+          nc_file,
+          x_var, X_range,
+          y_var, Y_range,
+          t_var, T_range,
+          variable_name, var_inds)
 }

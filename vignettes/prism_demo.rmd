@@ -1,5 +1,5 @@
 ---
-title: "Complete intersectr demo"
+title: "Comparison with geoknife and the Geo Data Portal"
 author: "dblodgett@usgs.gov"
 output: rmarkdown::html_vignette
 vignette: >
@@ -8,78 +8,81 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
   
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(
-collapse = TRUE,
-comment = "#>",
-fig.width=6,
-fig.height=4
-)
-options(scipen = 9999)
-library(magrittr)
-library(intersectr)
+  ```{r setup, include = FALSE}
+  knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width=6,
+  fig.height=4
+  )
+  options(scipen = 9999)
+  library(magrittr)
+  library(intersectr)
+  ```
+  
+  This is a complete demo showing a workflow implemented with [`intersectr`](https://github.com/dblodgett-usgs/intersectr) compared to the same workflow implemented with [`geoknife`](http://usgs-r.github.io/geoknife/). This both demonstrates `intersectr` and shows that we get the same answers as the well-vetted [Geo Data Portal](https://cida.usgs.gov/gdp/), as used by `geoknife`.
+  
+  One of the primary goals of the package is to intersect gridded time series data with polygon geometries. For example, and as shown below, we can get time-series of area-weighed average monthly precipitation for counties in North Carolina from the PRISM source dataset that has a 4km - monthly resolution.
+  
+  The example here uses a dataset from a THREDDS/OPeNDAP data server. Local NetCDF files can also be used but may require special handling if files are broken up through time.
+  
+  The [`ncmeta`](https://github.com/hypertidy/ncmeta/) package provides most of the NetCDF metadata handling and will work for either remote OPeNDAP hosted data or local NetCDF data. Below, we get a list of variables and their coordinate variables that will be used later to construct cell geometry.
+  ```{r nc_setup}
+  library(ncmeta)
+  library(dplyr)
+  library(RNetCDF)
+  library(sf)
+  nc_file <- "https://cida.usgs.gov/thredds/dodsC/prism_v2"
+  (nc_coord_vars <- nc_coord_var(nc_file))
+  variable_name <- "ppt"
+  nc_coord_vars <- filter(nc_coord_vars, variable == variable_name)
+  ```
+  
+  We'll use the same sample polygons provided by the [`sf`](https://github.com/r-spatial/sf) package as our geometry. To make sure we get a good comparison with the Geo Data Portal, a more detailed version of the North Carolina county geometry is available as part of `intersectr`.
+  ```{r geom}
+geom <- read_sf(system.file("extdata/detailed_counties.gpkg", 
+package = "intersectr"))
+plot(st_geometry(geom))
 ```
 
-This is a complete demo showing a workflow implemented with [`intersectr`](https://github.com/dblodgett-usgs/intersectr). One of the primary goals of the package is to intersect gridded time series data with polygon geometries. For example, and as shown below, we can get time-series of area-weighed average monthly precipitation for counties in North Carolina from the PRISM source dataset that has a 4km - monthly resolution.
+Now we can create cell geometry for the grid we are going to intersect with our county geometry. A function from [`ncmeta`](https://github.com/hypertidy/ncmeta/blob/master/R/nc-prj.R) helps figure out the right proj4 string from our NetCDF file.
 
-The example here uses a dataset from a THREDDS/OPeNDAP data server. Local NetCDF files can also be used but may require special handling if files are broken up through time.
-
-The [`ncmeta`](https://github.com/hypertidy/ncmeta/) package provides most of the NetCDF metadata handling and will work for either remote OPeNDAP hosted data or local NetCDF data. Below, we get a list of variables then find the coordinate variables for a selected variable.
-```{r nc_setup}
-nc_file <- "https://cida.usgs.gov/thredds/dodsC/prism_v2"
-(nc_var <- ncmeta::nc_vars(nc_file))
-variable_name <- "ppt"
-(nc_coord_vars <- ncmeta::nc_coord_var(nc_file, variable_name))
-```
-
-We'll use the sample polygon provided by the [`sf`](https://github.com/r-spatial/sf) package as our geometry. The EPSG:5070 projection is a reasonable equal area projection for work in the Conterminous US.
-```{r geom}
-(geom <- sf::st_transform(sf::read_sf(system.file("shape/nc.shp",
-                                                  package = "sf")),
-                          "+init=epsg:5070"))
-plot(sf::st_geometry(geom))
-```
-
-  Now we can create cell geometry for the grid we are going to intersect with our county geometry. A function from [`ncmeta`](https://github.com/hypertidy/ncmeta/blob/master/R/nc-prj.R) helps figure out the right proj4 string from our NetCDF file.
-
-While very small, some of the row coordinates spacings are big enough to be interpreted as irregular in the create_cell_geometry function. We can even them out with a regular sequence. 
+While very small, some of the row coordinates spacings are big enough to be interpreted as irregular in the create_cell_geometry function. We can even them out with the `regularize = TRUE` input. 
 
 The create_cell_geometry function generates an `sf` `data.frame` representing each cell from the dataset as a polygon with a unique id.
 ```{r cells}
-(nc_prj <- ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc_file)))
+(nc_prj <- nc_gm_to_prj(nc_grid_mapping_atts(nc_file)))
 
-nc <- RNetCDF::open.nc(nc_file)
-X_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$X, unpack = TRUE)
-Y_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE)
+nc <- open.nc(nc_file)
+X_coords <- var.get.nc(nc, nc_coord_vars$X, unpack = TRUE)
+Y_coords <- var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE)
 
 (cell_geometry <-
     create_cell_geometry(X_coords = X_coords,
                          Y_coords = Y_coords,
                          prj = nc_prj,
                          geom = geom, 
-                         buffer_dist = 10000,
+                         buffer_dist = 0.1, # Degrees
                          regularize = TRUE))
 
-plot(sf::st_geometry(sf::st_transform(cell_geometry, 
-                                      sf::st_crs(geom))), lwd = 0.2)
-plot(sf::st_geometry(geom), add = TRUE)
+plot(st_geometry(st_transform(cell_geometry, 
+                              st_crs(geom))), lwd = 0.2)
+plot(st_geometry(geom), add = TRUE)
 ```
-
-With our input geometries ready, we can run the area_weights and execute_intersection functions. 
 
 The area weights function provides weights for area-weighted statistics. The weight column of the output can be used in an [area-weighted-mean](https://en.wikipedia.org/wiki/Weighted_arithmetic_mean) calculation where mean of the data source cells is desired for each of the county polygons.
 
 ```{r area_weights}
-data_source_cells <- sf::st_sf(dplyr::select(cell_geometry, grid_ids))
-target_polygons <- sf::st_sf(dplyr::select(geom, FIPS))
-sf::st_agr(data_source_cells) <- "constant"
-sf::st_agr(target_polygons) <- "constant"
+data_source_cells <- st_sf(select(cell_geometry, grid_ids))
+target_polygons <- st_sf(select(geom, FIPS))
+st_agr(data_source_cells) <- "constant"
+st_agr(target_polygons) <- "constant"
 area_weights <- calculate_area_intersection_weights(
   data_source_cells,
-  target_polygons)
+  target_polygons, allow_lonlat = TRUE)
 ```
 
-Now we have everything we need to actually run the intersection. This function iterates through time steps, applying the intersection weights for each time step.
+Now we have everything we need to actually run the intersection. The `execute_intersection` function iterates through time steps, applying the intersection weights for each time step.
 ```{r run_intersection}
 start_date <- "2010-01-01 00:00:00"
 end_date <- "2011-01-01 00:00:00"
@@ -92,103 +95,145 @@ intersected <- execute_intersection(nc_file = nc_file,
                                     t_var = nc_coord_vars$T, 
                                     start_datetime = start_date, 
                                     end_datetime = end_date)
-# Need to fix in execute_intersection
-intersected[, 2:ncol(intersected)] <- intersected[, 2:ncol(intersected)]
+
+# Save for later comparison.
 intersected_intersectr <- intersected
 ```
 
 Now we can plot up some of the resulting data on a map or through time.
 ```{r plot_result}
-row <- which(as.character(intersected$time_stamp) == "2010-06-01")
-geom_data <- dplyr::select(geom, FIPS) %>%
-  dplyr::left_join(data.frame(FIPS = names(intersected)[2:ncol(intersected)],
-                              poly_data = as.numeric(intersected[row, 2:ncol(intersected)]),
-                              stringsAsFactors = FALSE),
-                   by = "FIPS")
-plot(geom_data["poly_data"],
-     main = paste(intersected[row, 1], "Prism Precip mm/month"))
-plot(intersected$time_stamp, seq(min(intersected[, 2:ncol(intersected)]), 
-                                 max(intersected[, 2:ncol(intersected)]),
-                                 length.out = nrow(intersected)), col = NA, 
+date <- "2010-06-01"
+row <- which(as.character(intersected_intersectr$time_stamp) == date)
+ncols <- ncol(intersected_intersectr)
+fips <- names(intersected)[2:ncols]
+ts_data <- intersected_intersectr[, 2:ncols]
+poly_data <- as.numeric(intersected_intersectr[row, 2:ncols])
+ts_range <- seq(min(ts_data), max(ts_data), length.out = nrow(ts_data))
+time_stamps <- intersected_intersectr$time_stamps
+
+geom_data <- geom %>%
+  select(FIPS) %>%
+  left_join(data.frame(FIPS = fips, poly_data = poly_data,
+                       stringsAsFactors = FALSE), by = "FIPS")
+
+plot(geom_data["poly_data"], main = paste(date, "Prism Precip mm/month"))
+plot(time_stamps, ts_range, col = NA, 
      xlab = "Year", ylab = "PRISM Indicated Precip (mm/month)")
-lines(intersected$time_stamp, apply(intersected[, 2:ncol(intersected)], 1, mean), lwd = 2, col = "grey")
-lines(intersected$time_stamp, apply(intersected[, 2:ncol(intersected)], 1, max), lwd = .5, col = "grey")
-lines(intersected$time_stamp, apply(intersected[, 2:ncol(intersected)], 1, min), lwd = .5, col = "grey")
+lines(time_stamps, apply(ts_data, 1, mean), lwd = 2, col = "grey")
+lines(time_stamps, apply(ts_data, 1, max), lwd = .5, col = "grey")
+lines(time_stamps, apply(ts_data, 1, min), lwd = .5, col = "grey")
 ```
 
-```{r geoknife}
+Now lets run the same thing with `geoknife` and plot up the same thing.
+```{r geoknife, eval=FALSE}
 library(geoknife)
 fabric <- webdata('prism')
 times(fabric) <- c(start_date, end_date)
 variables(fabric) <- "ppt"
+
 stencil <- webgeom(geom = "sample:Counties", attribute = "FIPS")
-values(stencil) <- geom$FIPS
+values(stencil) <- target_polygons$FIPS
+
 job <- geoknife(stencil, fabric, wait = TRUE)
+
 intersected <- result(job)
 intersected <- intersected[, 1:(ncol(intersected) - 2)]
-names(intersected)[1] <- "time_stamp"
-intersected_geoknife <- intersected
-```
+names(intersected)[1] <- "time_stamps"
 
+order <- match(names(intersected_intersectr), names(intersected))
+
+intersected_geoknife <- intersected[, order]
+```
+```{r load_cached_data, echo=FALSE}
+intersected_geoknife <- readRDS(system.file("extdata/intersected_geoknife.rds",
+                                            package = "intersectr"))
+```
 ```{r plot_results_2} 
-row <- which(as.character(intersected$time_stamp) == "2010-06-01")
-geom_data <- dplyr::select(geom, FIPS) %>%
-  dplyr::left_join(data.frame(FIPS = names(intersected)[2:ncol(intersected)],
-                              poly_data = as.numeric(intersected[row, 2:ncol(intersected)]),
-                              stringsAsFactors = FALSE),
-                   by = "FIPS")
-plot(geom_data["poly_data"],
-     main = paste(intersected[row, 1], "Prism Precip mm/month"))
-plot(intersected$time_stamp, seq(min(intersected[, 2:ncol(intersected)]), 
-                                 max(intersected[, 2:ncol(intersected)]),
-                                 length.out = nrow(intersected)), col = NA, 
+row <- which(as.character(intersected_geoknife$time_stamp) == date)
+ncols <- ncol(intersected_geoknife)
+fips <- names(intersected_geoknife)[2:ncols]
+ts_data <- intersected_geoknife[, 2:ncols]
+poly_data <- as.numeric(intersected_geoknife[row, 2:ncols])
+ts_range <- seq(min(ts_data), max(ts_data), length.out = nrow(ts_data))
+time_stamps <- intersected_geoknife$time_stamps
+
+geom_data <- geom %>%
+  select(FIPS) %>%
+  left_join(data.frame(FIPS = fips, poly_data = poly_data,
+                       stringsAsFactors = FALSE), by = "FIPS")
+
+plot(geom_data["poly_data"], main = paste(date, "Prism Precip mm/month"))
+plot(time_stamps, ts_range, col = NA, 
      xlab = "Year", ylab = "PRISM Indicated Precip (mm/month)")
-lines(intersected$time_stamp, apply(intersected[, 2:ncol(intersected)], 1, mean), lwd = 2, col = "grey")
-lines(intersected$time_stamp, apply(intersected[, 2:ncol(intersected)], 1, max), lwd = .5, col = "grey")
-lines(intersected$time_stamp, apply(intersected[, 2:ncol(intersected)], 1, min), lwd = .5, col = "grey")
+lines(time_stamps, apply(ts_data, 1, mean), lwd = 2, col = "grey")
+lines(time_stamps, apply(ts_data, 1, max), lwd = .5, col = "grey")
+lines(time_stamps, apply(ts_data, 1, min), lwd = .5, col = "grey")
+
 ```
 
+To get an idea of what this looks like on a map, now we can plot up the grid data and polygon data together.
 ```{r plot}
+
 X_inds <- seq(min(cell_geometry$X_ind), max(cell_geometry$X_ind), 1)
 Y_inds <- seq(min(cell_geometry$Y_ind), max(cell_geometry$Y_ind), 1)
+
 ids <- intersectr:::get_ids(length(X_inds), length(Y_inds))
-dates <- RNetCDF::var.get.nc(nc, "time", unpack = TRUE)
-date_units <- RNetCDF::att.get.nc(nc, "time", "units")
-dates <- RNetCDF::utcal.nc(date_units, dates, type = "c")
-date_ind <- which(as.character(dates) == "2010-06-01")
-grid_data <- RNetCDF::var.get.nc(nc, variable_name,
-                                 start = c(min(X_inds), min(Y_inds), date_ind),
-                                 count = c(length(X_inds), length(Y_inds), 1), 
-                                 unpack = TRUE)
+
+dates <- utcal.nc(att.get.nc(nc, "time", "units"), 
+                  var.get.nc(nc, "time", unpack = TRUE), 
+                  type = "c")
+
+date_ind <- which(as.character(dates) == date)
+
+grid_data <- var.get.nc(nc, variable_name,
+                        start = c(min(X_inds), min(Y_inds), date_ind),
+                        count = c(length(X_inds), length(Y_inds), 1), 
+                        unpack = TRUE)
 grid_data <- data.frame(grid_data = matrix(grid_data,
                                            ncol = 1,
                                            byrow = TRUE),
                         grid_ids = matrix(ids, ncol = 1))
 grid_data$grid_data[grid_data$grid_data < 0] <- NA
-grid_data <- dplyr::left_join(cell_geometry, grid_data, by = "grid_ids")
+grid_data <- left_join(cell_geometry, grid_data, by = "grid_ids")
 intersected <- intersected_intersectr
 row <- which(as.character(intersected$time_stamp) == "2010-06-01")
-geom_data <- dplyr::select(geom, FIPS) %>%
-  dplyr::left_join(data.frame(FIPS = names(intersected)[2:ncol(intersected)],
-                              poly_data = as.numeric(intersected[row, 2:ncol(intersected)]), 
-                              stringsAsFactors = FALSE),
-                   by = "FIPS")
-geom_data <- sf::st_transform(geom_data, sf::st_crs(grid_data))
+geom_data <- select(geom, FIPS) %>%
+  left_join(data.frame(FIPS = names(intersected)[2:ncol(intersected)],
+                       poly_data = as.numeric(intersected[row, 2:ncol(intersected)]), 
+                       stringsAsFactors = FALSE),
+            by = "FIPS")
+geom_data <- st_transform(geom_data, st_crs(grid_data))
 breaks <- c(0, 80, 120, 200, 300, 400)
 plot(grid_data["grid_data"], border = NA, breaks = breaks)
 plot(geom_data["poly_data"], breaks = breaks)
 plot(grid_data$geometry)
 plot(grid_data["grid_data"], border = NA, breaks = breaks, add = TRUE)
 plot(geom_data["poly_data"], breaks = breaks, add = TRUE)
+```  
+
+Now lets look at how these two results compare. As the historgram and map shows below, all differences are below 1%!
+```{r diff}
+row_ir <- which(as.character(intersected_intersectr$time_stamp) == "2010-06-01")
+row_gk <- which(as.character(intersected_geoknife$time_stamp) == "2010-06-01")
+data_ir <- intersected_intersectr[row_ir, 2:ncol(intersected_intersectr)]
+data_gk <- intersected_geoknife[row_gk, 2:ncol(intersected_geoknife)]
+all(names(data_ir) == names(data_gk))
+compare <- data.frame(fips = names(data_ir), 
+                      ir = as.numeric(data_ir), 
+                      gk = as.numeric(data_gk), stringsAsFactors = FALSE)
+compare["diffs"] <- 100 * (as.numeric((data_ir - data_gk) / ((data_ir + data_gk) / 2)))
+
+hist(compare$diffs, 
+     main = "Histogram of percent difference intersectr - geoknife.", 
+     xlab = "Percent Different")
 ```
 
-```{r diff}
-row_gk <- which(as.character(intersected_geoknife$time_stamp) == "2010-06-01")
-row_ir <- which(as.character(intersected_intersectr$time_stamp) == "2010-06-01")
-diffs <- (intersected_intersectr[row_ir, 2:ncol(intersected_intersectr)] - 
-            intersected_geoknife[row_gk, 2:ncol(intersected_geoknife)]) / 
-  ((intersected_intersectr[row_ir, 2:ncol(intersected_intersectr)] + 
-      intersected_geoknife[row_gk, 2:ncol(intersected_geoknife)]) / 2)
-max(as.numeric(diffs[1,]))
-mean(as.numeric(diffs[1,]))
+```{r which_diff}
+max_diff <- which(abs(compare$diffs) == max(abs(compare$diffs)))
+data_ir[max_diff]
+data_gk[max_diff]
+
+geom_data <- left_join(select(geom_data, FIPS, poly_data),
+                       select(compare, fips, diffs), by = c("FIPS" = "fips"))
+plot(geom_data["diffs"])
 ```

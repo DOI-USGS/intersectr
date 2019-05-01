@@ -176,7 +176,9 @@ execute_intersection <- function(nc_file,
 
       names(out) <- out_names
 
-      return(cbind(ri$time_steps, out))
+      time_steps <- data.frame(time_stamps = ri$time_steps)
+
+      return(cbind(time_steps, out))
     }
 }
 

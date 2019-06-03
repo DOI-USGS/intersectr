@@ -11,7 +11,7 @@ Description: Package for intersecting spatiotemporal attribute data. The primary
 URL: https://github.com/USGS-R/intersectr
 BugReports: https://github.com/USGS-R/intersectr/issues
 Imports: sf, stars, dplyr, RNetCDF, ncmeta, areal, data.table, ncdfgeom, rgdal
-Remotes: USGS-R/ncdfgeom, slu-openGIS/areal@v0.1.3
+Remotes: USGS-R/ncdfgeom
 Suggests: testthat, tibble, knitr, rmarkdown
 License: CC0
 Encoding: UTF-8

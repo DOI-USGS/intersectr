@@ -27,8 +27,8 @@ test_that("1d projected", {
   cell_geometry <- suppressWarnings(
     create_cell_geometry(x, y, in_prj, geom, 1000))
 
-  expect(nrow(cell_geometry) == 3626)
-  expect(all(c("grid_ids", "X_ind", "Y_ind") %in% names(cell_geometry)))
+  expect_true(nrow(cell_geometry) == 3626)
+  expect_true(all(c("grid_ids", "X_ind", "Y_ind") %in% names(cell_geometry)))
 
   data_source_cells <- st_sf(select(cell_geometry, grid_ids))
   target_polygons <- st_sf(select(geom, CNTY_ID))
@@ -46,15 +46,15 @@ test_that("1d projected", {
                                       cell_geometry,
                                       x_var, y_var, t_var)
 
-  expect(all(names(intersected) %in% c("time_stamp", "2156")))
-  expect(nrow(intersected) == 5)
+  expect_true(all(names(intersected) %in% c("time_stamp", "2156")))
+  expect_true(nrow(intersected) == 5)
 
   intersected <- execute_intersection(nc_file, variable_name, area_weights,
                                       cell_geometry, x_var, y_var, t_var,
                                       start_datetime = "1999-09-14 00:00:00",
                                       end_datetime = "1999-09-16 00:00:00")
 
-  expect(nrow(intersected) == 3)
+  expect_true(nrow(intersected) == 3)
 })
 
 test_that("1d projected", {
@@ -82,6 +82,6 @@ test_that("1d projected", {
                          prj = test_data$nc_prj,
                          geom = geom)
 
-  expect(nrow(cell_geometry) == 3384)
+  expect_true(nrow(cell_geometry) == 3384)
 
 })

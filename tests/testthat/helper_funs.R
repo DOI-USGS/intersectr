@@ -56,3 +56,47 @@ write_incremental <- function(file_handle,
     return(invisible(file_handle))
   }
 }
+
+
+test_na <- function(nc_file, variable_name, geom) {
+  nc_coord_vars <- ncmeta::nc_coord_var(nc_file, variable_name)
+
+  suppressWarnings(nc_prj <- ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc_file)))
+
+  nc <- RNetCDF::open.nc(nc_file)
+  X_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$X, unpack = TRUE)
+  X_coords <- seq(from = X_coords[1],
+                  to = X_coords[length(X_coords)],
+                  along.with = X_coords)
+
+  Y_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE)
+  Y_coords <- seq(from = Y_coords[1],
+                  to = Y_coords[length(Y_coords)],
+                  along.with = Y_coords)
+
+  suppressWarnings(cell_geometry <- create_cell_geometry(X_coords = X_coords,
+                                                         Y_coords = Y_coords,
+                                                         prj = nc_prj,
+                                                         geom = geom,
+                                                         buffer_dist = 0.05))
+  data_source_cells <- sf::st_sf(dplyr::select(cell_geometry, grid_ids))
+  target_polygons <- sf::st_sf(dplyr::select(geom, CNTY_ID))
+
+  area_weights <- calculate_area_intersection_weights(
+    data_source_cells,
+    target_polygons,
+    allow_lonlat = TRUE)
+
+  intersected <- execute_intersection(nc_file,
+                                      variable_name,
+                                      area_weights,
+                                      cell_geometry,
+                                      nc_coord_vars$X,
+                                      nc_coord_vars$Y,
+                                      nc_coord_vars$T,
+                                      start_datetime = "1999-01-01 00:00:00",
+                                      end_datetime = "1999-01-01 00:00:00")
+
+  return(intersected)
+
+}

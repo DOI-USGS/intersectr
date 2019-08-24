@@ -126,30 +126,20 @@ execute_intersection <- function(nc_file,
     if(ri$dimid_order[1] > ri$dimid_order[2]) transpose <- TRUE
 
     intersection_weights <- data.table(intersection_weights)
-    sum_weights <- intersection_weights[, list(sw = sum(w, na.rm = TRUE)), by = poly_id]
 
     join_indices <- match(intersection_weights$grid_ids, ids)
 
     for (i in 1:out_nrows) {
       try_backoff({
         timer <- Sys.time()
-        i_data <- var.get.nc(nc, variable_name,
-                             start = c(min(ri$X), min(ri$Y), ri$T[i])[ri$dimid_order],
-                             count = c(length(ri$X), length(ri$Y), 1)[ri$dimid_order],
-                             unpack = TRUE)
 
-        if(transpose) i_data <- t(i_data)
+        i_data <- get_i_data(i, nc, variable_name, ri, transpose,
+                             intersection_weights, join_indices)
 
-        i_data <- data.table(d = as.numeric(matrix(i_data,
-                                        ncol = 1,
-                                        byrow = FALSE)))
-
-        i_data <- cbind(intersection_weights,
-                        i_data[join_indices, ])
-
-        i_data <- i_data[, list(d = sum( (d * w), na.rm = TRUE)), by = poly_id]
-
-        i_data <- as.numeric(i_data$d / sum_weights$sw)
+        i_data<-  as.numeric(i_data[, list(d = sum( (d * w), na.rm = TRUE)),
+                                    by = poly_id]$d /
+                               i_data[, list(sw = sum(w, na.rm = TRUE)),
+                                      by = poly_id]$sw)
 
         if(!is.null(writer_fun)) {
           file_handle <- writer_fun(file_handle, step = i, size = size,
@@ -326,4 +316,22 @@ get_dap_url <- function(min_x, max_x, min_y, max_y,
           y_var, Y_range,
           t_var, T_range,
           variable_name, var_inds)
+}
+
+get_i_data <- function(i, nc, variable_name, ri, transpose, intersection_weights, join_indices) {
+  i_data <- var.get.nc(nc, variable_name,
+                       start = c(min(ri$X), min(ri$Y), ri$T[i])[ri$dimid_order],
+                       count = c(length(ri$X), length(ri$Y), 1)[ri$dimid_order],
+                       unpack = TRUE)
+
+  if(transpose) i_data <- t(i_data)
+
+  i_data <- data.table(d = as.numeric(matrix(i_data,
+                                             ncol = 1,
+                                             byrow = FALSE)))
+
+  i_data <- cbind(intersection_weights,
+                  i_data[join_indices, ])
+
+  i_data <- i_data[, w := ifelse(is.na(d), NA, w)]
 }

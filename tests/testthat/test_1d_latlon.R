@@ -28,14 +28,14 @@ test_that("1d lat/lon", {
   cell_geometry <- suppressWarnings(
     create_cell_geometry(x, y, in_prj, geom, 500))
 
-  expect(nrow(cell_geometry) == 180)
+  expect_true(nrow(cell_geometry) == 180)
 
   cell_geometry <- suppressWarnings(
     create_cell_geometry(x, y, in_prj, geom, 1000))
 
-  expect(nrow(cell_geometry) == 210)
+  expect_true(nrow(cell_geometry) == 210)
 
-  expect(all(c("grid_ids", "X_ind", "Y_ind") %in% names(cell_geometry)))
+  expect_true(all(c("grid_ids", "X_ind", "Y_ind") %in% names(cell_geometry)))
 
   data_source_cells <- st_sf(select(cell_geometry, grid_ids))
   target_polygons <- st_sf(select(geom, CNTY_ID))
@@ -50,15 +50,15 @@ test_that("1d lat/lon", {
   intersected <- execute_intersection(nc_file, variable_name, area_weights,
                                       cell_geometry, x_var, y_var, t_var)
 
-  expect(all(names(intersected) %in% c("time_stamp", "1832")))
-  expect(nrow(intersected) == 5)
+  expect_true(all(names(intersected) %in% c("time_stamp", "1832")))
+  expect_true(nrow(intersected) == 5)
 
   intersected <- execute_intersection(nc_file, variable_name, area_weights,
                                       cell_geometry, x_var, y_var, t_var,
                                       start_datetime = "2018-09-13 00:00:00",
                                       end_datetime = "2018-09-14 00:00:00")
 
-  expect(nrow(intersected) == 2)
+  expect_true(nrow(intersected) == 2)
 
   tf <- tempfile()
 
@@ -66,7 +66,7 @@ test_that("1d lat/lon", {
                       variable_name = "test_varname", variable_units = "test_varunits"),
                  "inserting fake latitude and longitude values")
 
-  expect(file.exists(tf))
+  expect_true(file.exists(tf))
 
   unlink(tf)
 
@@ -77,7 +77,7 @@ test_that("1d lat/lon", {
                        out_var_meta = list(name = "test",
                                            long_name = "long_test",
                                            units = "mm"))
-  expect(file.exists(tf))
+  expect_true(file.exists(tf))
 
   unlink(tf)
 
@@ -87,6 +87,6 @@ test_that("1d lat/lon", {
                                   start_datetime = "2018-09-13 00:00:00",
                                   end_datetime = "2018-09-14 00:00:00")
 
-  expect(grepl("metdata.nc\\?lon\\[316:336\\],lat\\[73:82\\],day\\[2:3\\],precipitation_amount\\[2:3\\]\\[73:82\\]\\[316:336\\]", dap))
+  expect_true(grepl("metdata.nc\\?lon\\[316:336\\],lat\\[73:82\\],day\\[2:3\\],precipitation_amount\\[2:3\\]\\[73:82\\]\\[316:336\\]", dap))
 
 })

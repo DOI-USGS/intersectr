@@ -6,7 +6,7 @@ test_that("basic", {
   prj <- "+init=epsg:5070"
   cells <- create_cell_geometry(X_coords, Y_coords, prj)
 
-  expect(all(c("grid_ids", "X_ind", "Y_ind") %in% names(cells)))
+  expect_true(all(c("grid_ids", "X_ind", "Y_ind") %in% names(cells)))
 
   expect_equal(cells[cells$grid_ids == 1, ]$X_ind, 1)
   expect_equal(cells[cells$grid_ids == 1, ]$Y_ind, 1)
@@ -16,7 +16,7 @@ test_that("basic", {
 
   expect_s3_class(cells$geometry, "sfc_POLYGON")
 
-  expect(st_crs(cells) == st_crs(prj))
+  expect_true(st_crs(cells) == st_crs(prj))
 })
 
 test_that("daymet_subset", {
@@ -53,7 +53,7 @@ test_that("daymet_subset", {
 
   expect_s3_class(cells$geometry, "sfc_POLYGON")
 
-  expect(st_crs(cells) == st_crs(prj))
+  expect_true(st_crs(cells) == st_crs(prj))
 })
 
 test_that("crossing the date line works", {
@@ -63,8 +63,8 @@ test_that("crossing the date line works", {
   close.nc(nc)
   warn <- capture_warnings(cells <- create_cell_geometry(x, y, 4326, regularize = TRUE))
   expect_equal(nrow(cells), 17440)
-  expect("Found longitude greater than 180. Converting to -180, 180" %in% warn)
-  expect("Found longidude near international date line. Using 0-360 longitude." %in% warn)
+  expect_true("Found longitude greater than 180. Converting to -180, 180" %in% warn)
+  expect_true("Found longidude near international date line. Using 0-360 longitude." %in% warn)
 })
 
 test_that("crossing date line more", {
@@ -96,12 +96,12 @@ test_that("crossing date line more", {
 
   warn <- capture_warnings(cells <- create_cell_geometry(x, y, 4326, regularize = TRUE))
 
-  expect(nrow(cells) == 6713)
-  expect("Found longidude near international date line. Using 0-360 longitude." %in% warn)
+  expect_true(nrow(cells) == 6713)
+  expect_true("Found longidude near international date line. Using 0-360 longitude." %in% warn)
 
   warn <- capture_warnings(cells <- create_cell_geometry(x, y, 4326, geom, regularize = TRUE))
-  expect(nrow(cells) == 960)
-  expect("Found longidude near international date line. Using 0-360 longitude." %in% warn)
+  expect_true(nrow(cells) == 960)
+  expect_true("Found longidude near international date line. Using 0-360 longitude." %in% warn)
 
   geom <- matrix(c(-173.1318, -179.1185,
                    -179.1336, -179.1488, 179.226, 179.2137, 173.6277, 173.3859,
@@ -122,6 +122,6 @@ test_that("crossing date line more", {
     st_sfc(crs = 4326)
 
   warn <- capture_warnings(cells <- create_cell_geometry(x, y, 4326, geom, regularize = TRUE))
-  expect(nrow(cells) == 1872)
+  expect_true(nrow(cells) == 1872)
 
 })

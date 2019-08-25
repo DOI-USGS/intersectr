@@ -257,7 +257,7 @@ get_request_inds <- function(min_x, max_x, min_y, max_y,
   } else {
 
     T_inds <- get_time_inds(time_steps, start_datetime, end_datetime)
-    time_steps <- time_steps[T_inds, ]
+    time_steps <- time_steps[T_inds, ,drop = FALSE]
 
   }
 

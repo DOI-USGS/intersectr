@@ -108,7 +108,7 @@ test_that("curvilinear", {
   cell_geometry <- suppressWarnings(
     create_cell_geometry(x, y, in_prj))
 
-  geom <- cell_geometry[520:540, ]
+  geom <- cell_geometry[530:600, ]
 
   data_source_cells <- st_transform(st_sf(select(cell_geometry, grid_ids)), 5070)
   target_polygons <- st_transform(st_sf(select(geom, ids = grid_ids)), 5070)
@@ -122,6 +122,22 @@ test_that("curvilinear", {
 
   suppressWarnings(intersected <- execute_intersection(nc_file, variable_name, area_weights,
                                                        cell_geometry, x_var, y_var, t_var))
+
+  expect_equal(ncol(intersected), 72)
+
+  # dat <- stars::read_ncdf(nc_file)
+  # dat$wvh[dat$wvh == units::set_units(-99999, "m")] <- units::set_units(NA, "m")
+  # dat <- st_transform(dat, 5070)
+  # dat <- st_as_sf(dat)
+  # plot(st_geometry(dat))
+  # plot(dat["2019-08-22 14:00:00"], border = NA, add = TRUE)
+  #
+  #
+  # geom["data"] <- as.numeric(intersected[, 2:ncol(intersected)])
+  # geom$data[geom$data == -99999] <- NA
+  # geom <- st_transform(geom, 5070)
+  # plot(geom["data"], add = TRUE)
+
 })
 
 # geom_data <- select(target_polygons, grid_ids_2)

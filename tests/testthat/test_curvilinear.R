@@ -87,7 +87,7 @@ test_that("curvilinear", {
 
 test_that("curvilinear", {
   library(ncmeta)
-  nc_file <- system.file("nc/c201923412.out1_4.nc", package = "stars")
+  nc_file <- system.file("extdata/c201923412.out1_4.nc", package = "intersectr")
 
   nc_var <- nc_vars(nc_file)
   variable_name <- nc_var$name[4]

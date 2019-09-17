@@ -228,12 +228,27 @@ get_request_inds <- function(min_x, max_x, min_y, max_y,
   Y_var_info <- var.inq.nc(nc, y_var)
   T_var_info <- var.inq.nc(nc, t_var)
 
+  # (X_inds and Y_inds are the first and second dimensions of 2d coordinate variables)
+  X_inds <- seq(min_x, max_x, 1)
+  Y_inds <- seq(min_y, max_y, 1)
+
   if (X_var_info$ndims > 1 | Y_var_info$ndims > 1 | T_var_info$ndims > 1) {
     warning("2d coordinate variable found. Caution, limited testing.")
     warning("assuming dimension order")
     dimid_order <- match(nc_var_info$dimids,
                          c(X_var_info$dimids,
                            T_var_info$dimids))
+
+    X_inds_dim <- X_var_info$dimids[1]
+    Y_inds_dim <- X_var_info$dimids[2]
+    T_inds_dim <- T_var_info$dimids
+    # This whole thing needs to be refactored.
+    if(X_inds_dim > Y_inds_dim &
+       all(dimid_order[1:2] == c(1, 2)) &
+       X_inds_dim < 2) {
+      Y_inds <- seq(min_x, max_x, 1)
+      X_inds <- seq(min_y, max_y, 1)
+    }
   } else {
     dimid_order <- match(nc_var_info$dimids,
                          c(X_var_info$dimids,
@@ -246,9 +261,6 @@ get_request_inds <- function(min_x, max_x, min_y, max_y,
                          "c")
 
   time_steps <- data.frame(time_stamp = time_steps)
-
-  X_inds <- seq(min_x, max_x, 1)
-  Y_inds <- seq(min_y, max_y, 1)
 
   if (is.null(start_datetime) & is.null(end_datetime)) {
 

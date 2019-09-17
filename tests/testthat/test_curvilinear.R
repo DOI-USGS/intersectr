@@ -85,6 +85,61 @@ test_that("curvilinear", {
   #                                                      cell_geometry, x_var, y_var, t_var))
 })
 
+test_that("curvilinear", {
+  library(ncmeta)
+  nc_file <- system.file("extdata/c201923412.out1_4.nc", package = "intersectr")
+
+  nc_var <- nc_vars(nc_file)
+  variable_name <- nc_var$name[4]
+
+  nc_coord_vars <- nc_coord_var(nc_file, variable_name)
+
+  x_var <- nc_coord_vars$X
+  y_var <- nc_coord_vars$Y
+  t_var <- nc_coord_vars$T
+
+  nc <- RNetCDF::open.nc(nc_file)
+
+  x <- RNetCDF::var.get.nc(nc, x_var, unpack = TRUE)
+  y <- RNetCDF::var.get.nc(nc, y_var, unpack = TRUE)
+
+  in_prj <- "+init=epsg:4326"
+
+  cell_geometry <- suppressWarnings(
+    create_cell_geometry(x, y, in_prj))
+
+  geom <- cell_geometry[530:600, ]
+
+  data_source_cells <- st_transform(st_sf(select(cell_geometry, grid_ids)), 5070)
+  target_polygons <- st_transform(st_sf(select(geom, ids = grid_ids)), 5070)
+
+  sf::st_agr(data_source_cells) <- "constant"
+  sf::st_agr(target_polygons) <- "constant"
+
+  area_weights <- calculate_area_intersection_weights(
+    data_source_cells,
+    target_polygons)
+
+  suppressWarnings(intersected <- execute_intersection(nc_file, variable_name, area_weights,
+                                                       cell_geometry, x_var, y_var, t_var))
+
+  expect_equal(ncol(intersected), 72)
+
+  # dat <- stars::read_ncdf(nc_file)
+  # dat$wvh[dat$wvh == units::set_units(-99999, "m")] <- units::set_units(NA, "m")
+  # dat <- st_transform(dat, 5070)
+  # dat <- st_as_sf(dat)
+  # plot(st_geometry(dat))
+  # plot(dat["2019-08-22 14:00:00"], border = NA, add = TRUE)
+  #
+  #
+  # geom["data"] <- as.numeric(intersected[, 2:ncol(intersected)])
+  # geom$data[geom$data == -99999] <- NA
+  # geom <- st_transform(geom, 5070)
+  # plot(geom["data"], add = TRUE)
+
+})
+
 # geom_data <- select(target_polygons, grid_ids_2)
 # g_names <- as.numeric(names(intersected)[2:ncol(intersected)])
 #

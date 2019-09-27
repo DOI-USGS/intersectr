@@ -42,7 +42,7 @@ create_cell_geometry <- function(X_coords, Y_coords, prj,
                                  geom = NULL, buffer_dist = 0,
                                  regularize = FALSE, eps = 1e-10) {
 
-  x_ind <- y_ind <- NULL
+  i_ind <- j_ind <- NULL
   dateline <- FALSE
   lonlat <- st_crs(prj)$proj == "longlat"
 
@@ -90,25 +90,25 @@ create_cell_geometry <- function(X_coords, Y_coords, prj,
 
       matches <- dplyr::intersect(as.data.frame(X_inds), as.data.frame(Y_inds))
 
-      X_inds <- seq(min(matches[, 1]), max(matches[, 1]), 1)
-      Y_inds <- seq(min(matches[, 2]), max(matches[, 2]), 1)
+      i_inds <- seq(min(matches[, 1]), max(matches[, 1]), 1)
+      j_inds <- seq(min(matches[, 2]), max(matches[, 2]), 1)
 
-      X_coords <- X_coords[X_inds, Y_inds]
-      Y_coords <- Y_coords[X_inds, Y_inds]
+      X_coords <- X_coords[i_inds, j_inds]
+      Y_coords <- Y_coords[i_inds, j_inds]
     } else {
 
       # Grab stuff in bounding box.
-      X_inds <- which(X_coords > req_bbox$xmin & X_coords < req_bbox$xmax)
-      Y_inds <- which(Y_coords > req_bbox$ymin & Y_coords < req_bbox$ymax)
+      i_inds <- which(X_coords > req_bbox$xmin & X_coords < req_bbox$xmax)
+      j_inds <- which(Y_coords > req_bbox$ymin & Y_coords < req_bbox$ymax)
 
-      if(length(X_inds) == 0 | length(Y_inds) == 0)
+      if(length(i_inds) == 0 | length(j_inds) == 0)
         stop("Data and geometry not found to intersect. Check projection?")
 
-      X_coords <- X_coords[X_inds]
-      Y_coords <- Y_coords[Y_inds]
+      X_coords <- X_coords[i_inds]
+      Y_coords <- Y_coords[j_inds]
     }
 
-    sf_points <- construct_points(X_coords, Y_coords, X_inds, Y_inds, prj, array_mode = array_mode)
+    sf_points <- construct_points(X_coords, Y_coords, i_inds, j_inds, prj, array_mode = array_mode)
   } else {
     sf_points <- construct_points(X_coords, Y_coords, prj = prj, array_mode = array_mode)
   }
@@ -151,15 +151,15 @@ create_cell_geometry <- function(X_coords, Y_coords, prj,
   return(sf_polygons)
 }
 
-construct_points <- function(x, y, x_ind = NULL, y_ind = NULL, prj, array_mode) {
+construct_points <- function(x, y, i_ind = NULL, j_ind = NULL, prj, array_mode) {
 
   if(array_mode) {
-    if(is.null(x_ind)) {
-      x_ind <- matrix(rep(c(1:ncol(x)), nrow(x)),
+    if(is.null(i_ind)) {
+      i_ind <- matrix(rep(c(1:ncol(x)), nrow(x)),
                       nrow = nrow(x), ncol = ncol(x),
                       byrow = TRUE)
 
-      y_ind <- matrix(rep(c(1:nrow(x)), ncol(x)),
+      j_ind <- matrix(rep(c(1:nrow(x)), ncol(x)),
                       nrow = nrow(x), ncol = ncol(x),
                       byrow = FALSE)
     }
@@ -172,33 +172,33 @@ construct_points <- function(x, y, x_ind = NULL, y_ind = NULL, prj, array_mode) 
     y_vals <- matrix(y, nrow = length(y), ncol = length(x),
                      byrow = F)
 
-    if(is.null(x_ind)) {
-      x_ind <- c(1:ncol(x_vals))
-      y_ind <- c(1:nrow(x_vals))
+    if(is.null(i_ind)) {
+      i_ind <- c(1:ncol(x_vals))
+      j_ind <- c(1:nrow(x_vals))
     }
   }
 
-  if(length(x_ind) == nrow(x_vals)) {
+  if(length(i_ind) == nrow(x_vals)) {
     warning("Rows and columns flipped? Check output for valid indices.")
-    X_ind <- matrix(rep(x_ind, ncol(x_vals)),
+    i_ind_matrix <- matrix(rep(i_ind, ncol(x_vals)),
                     nrow = ncol(x_vals), ncol = nrow(x_vals),
                     byrow = TRUE)
-    Y_ind <- matrix(rep(y_ind, nrow(x_vals)),
+    j_ind_matrix <- matrix(rep(j_ind, nrow(x_vals)),
                     nrow = ncol(x_vals), ncol = nrow(x_vals),
                     byrow = FALSE)
   } else {
-    X_ind <- matrix(rep(x_ind, nrow(x_vals)),
+    i_ind_matrix <- matrix(rep(i_ind, nrow(x_vals)),
                     nrow = nrow(x_vals), ncol = ncol(x_vals),
                     byrow = TRUE)
-    Y_ind <- matrix(rep(y_ind, ncol(x_vals)),
+    j_ind_matrix <- matrix(rep(j_ind, ncol(x_vals)),
                     nrow = nrow(x_vals), ncol = ncol(x_vals),
                     byrow = FALSE)
   }
 
   sf_points <- st_as_sf(data.frame(x = matrix(x_vals, ncol = 1),
                                    y = matrix(y_vals, ncol = 1),
-                                   X_ind = matrix(X_ind, ncol = 1),
-                                   Y_ind = matrix(Y_ind, ncol = 1)),
+                                   X_ind = matrix(i_ind_matrix, ncol = 1),
+                                   Y_ind = matrix(j_ind_matrix, ncol = 1)),
                         coords = c("x", "y"),
                         crs = prj,
                         agr = "constant")

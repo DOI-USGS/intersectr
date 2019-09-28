@@ -40,7 +40,7 @@
 #'
 create_cell_geometry <- function(X_coords, Y_coords, prj,
                                  geom = NULL, buffer_dist = 0,
-                                 regularize = FALSE, eps = 1e-10) {
+                                 regularize = FALSE, eps = 1e-10, flip = FALSE) {
 
   i_ind <- j_ind <- NULL
   dateline <- FALSE
@@ -120,13 +120,22 @@ create_cell_geometry <- function(X_coords, Y_coords, prj,
     }
     sf_points <-construct_points_array(X_coords, Y_coords, i_ind, j_ind, prj)
 
-    sf_polygons <- get_ids(nrow(X_coords), ncol(X_coords))
+    if(flip) {
+      temp <- sf_points$X_ind
+      sf_points$X_ind <- sf_points$Y_ind
+      sf_points$Y_ind <- temp
+    }
 
-    dim(sf_polygons) <- c(x = nrow(X_coords), y = ncol(X_coords))
+    i_dim_len <- nrow(X_coords)
+    j_dim_len <- ncol(X_coords)
+
+    sf_polygons <- get_ids(i_dim_len, j_dim_len)
+
+    dim(sf_polygons) <- c(x = i_dim_len, y = j_dim_len)
 
     sf_polygons <- st_as_stars(list(sf_polygons = sf_polygons),
-                               dimensions = st_dimensions(x = seq(1:nrow(X_coords)),
-                                                          y = seq(1:ncol(X_coords)),
+                               dimensions = st_dimensions(x = seq(1:i_dim_len),
+                                                          y = seq(1:j_dim_len),
                                                           .raster = c("x", "y"),
                                                           cell_midpoints = TRUE))
 
@@ -191,12 +200,21 @@ get_points <- function(x_vals, y_vals, i_ind, j_ind, prj) {
                            nrow = ncol(x_vals), ncol = nrow(x_vals),
                            byrow = FALSE)
   } else {
-    i_ind_matrix <- matrix(rep(i_ind, nrow(x_vals)),
-                           nrow = nrow(x_vals), ncol = ncol(x_vals),
-                           byrow = TRUE)
-    j_ind_matrix <- matrix(rep(j_ind, ncol(x_vals)),
-                           nrow = nrow(x_vals), ncol = ncol(x_vals),
-                           byrow = FALSE)
+    if(is.matrix(i_ind)) {
+      i_ind_matrix <- matrix(i_ind,
+                             nrow = nrow(x_vals), ncol = ncol(x_vals),
+                             byrow = TRUE)
+      j_ind_matrix <- matrix(j_ind,
+                             nrow = nrow(x_vals), ncol = ncol(x_vals),
+                             byrow = FALSE)
+    } else {
+      i_ind_matrix <- matrix(rep(i_ind, nrow(x_vals)),
+                             nrow = nrow(x_vals), ncol = ncol(x_vals),
+                             byrow = TRUE)
+      j_ind_matrix <- matrix(rep(j_ind, ncol(x_vals)),
+                             nrow = nrow(x_vals), ncol = ncol(x_vals),
+                             byrow = FALSE)
+    }
   }
 
   sf_points <- st_as_sf(data.frame(x = matrix(x_vals, ncol = 1),

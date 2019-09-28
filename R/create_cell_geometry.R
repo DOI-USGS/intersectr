@@ -47,8 +47,7 @@ create_cell_geometry <- function(X_coords, Y_coords, prj,
   lonlat <- st_crs(prj)$proj == "longlat"
 
   if (!is.array(X_coords) || length(dim(X_coords)) == 1) {
-    array_mode <- FALSE
-
+    #### Vector Coordinate Variables
     if(lonlat & any(X_coords > 180)) {
       warning("Found longitude greater than 180. Converting to -180, 180")
       X_coords[X_coords > 180] <- X_coords[X_coords > 180] - 360
@@ -73,47 +72,54 @@ create_cell_geometry <- function(X_coords, Y_coords, prj,
       }
     }
 
+    if(!is.null(geom)) {
+      geom <- st_buffer(st_union(geom), buffer_dist)
+      if(!dateline) geom <- st_transform(geom, prj)
+      req_bbox <- st_bbox(geom)
+
+      # Grab stuff in bounding box.
+      i_ind <- which(X_coords > req_bbox$xmin & X_coords < req_bbox$xmax)
+      j_ind <- which(Y_coords > req_bbox$ymin & Y_coords < req_bbox$ymax)
+
+      if(length(i_ind) == 0 | length(j_ind) == 0)
+        stop("Data and geometry not found to intersect. Check projection?")
+
+      X_coords <- X_coords[i_ind]
+      Y_coords <- Y_coords[j_ind]
+    }
+
+    sf_points <-construct_points(X_coords, Y_coords, i_ind, j_ind, prj)
+
+    sf_polygons <- get_ids(length(X_coords), length(Y_coords))
+    dim(sf_polygons) <- c(x = length(X_coords), y = length(Y_coords))
+
+    sf_polygons <- st_as_stars(list(sf_polygons = sf_polygons),
+                               dimensions = st_dimensions(x = as.numeric(X_coords),
+                                                          y = as.numeric(Y_coords),
+                                                          .raster = c("x", "y"),
+                                                          cell_midpoints = TRUE))
+
   } else {
-    array_mode <- TRUE
-  }
+  #### Array Coordinate Variables
+    if(!is.null(geom)) {
+      geom <- st_buffer(st_union(geom), buffer_dist)
+      if(!dateline) geom <- st_transform(geom, prj)
+      req_bbox <- st_bbox(geom)
 
-  if(!is.null(geom)) {
-    geom <- st_buffer(st_union(geom), buffer_dist)
-    if(!dateline) geom <- st_transform(geom, prj)
-
-    req_bbox <- st_bbox(geom)
-
-    if(array_mode) {
       warning("Found curvilinear grid, caution, limited testing.")
       X_inds <- which(X_coords > req_bbox$xmin & X_coords < req_bbox$xmax, arr.ind = TRUE)
       Y_inds <- which(Y_coords > req_bbox$ymin & Y_coords < req_bbox$ymax, arr.ind = TRUE)
 
       matches <- dplyr::intersect(as.data.frame(X_inds), as.data.frame(Y_inds))
 
-      i_inds <- seq(min(matches[, 1]), max(matches[, 1]), 1)
-      j_inds <- seq(min(matches[, 2]), max(matches[, 2]), 1)
+      i_ind <- seq(min(matches[, 1]), max(matches[, 1]), 1)
+      j_ind <- seq(min(matches[, 2]), max(matches[, 2]), 1)
 
-      X_coords <- X_coords[i_inds, j_inds]
-      Y_coords <- Y_coords[i_inds, j_inds]
-    } else {
-
-      # Grab stuff in bounding box.
-      i_inds <- which(X_coords > req_bbox$xmin & X_coords < req_bbox$xmax)
-      j_inds <- which(Y_coords > req_bbox$ymin & Y_coords < req_bbox$ymax)
-
-      if(length(i_inds) == 0 | length(j_inds) == 0)
-        stop("Data and geometry not found to intersect. Check projection?")
-
-      X_coords <- X_coords[i_inds]
-      Y_coords <- Y_coords[j_inds]
+      X_coords <- X_coords[i_ind, j_ind]
+      Y_coords <- Y_coords[i_ind, j_ind]
     }
+    sf_points <-construct_points_array(X_coords, Y_coords, i_ind, j_ind, prj)
 
-    sf_points <- construct_points(X_coords, Y_coords, i_inds, j_inds, prj, array_mode = array_mode)
-  } else {
-    sf_points <- construct_points(X_coords, Y_coords, prj = prj, array_mode = array_mode)
-  }
-
-  if(array_mode) {
     sf_polygons <- get_ids(nrow(X_coords), ncol(X_coords))
 
     dim(sf_polygons) <- c(x = nrow(X_coords), y = ncol(X_coords))
@@ -126,17 +132,8 @@ create_cell_geometry <- function(X_coords, Y_coords, prj,
 
     sf_polygons <- st_as_stars(sf_polygons, curvilinear = list(x = X_coords,
                                                                y = Y_coords))
-  } else {
-
-    sf_polygons <- get_ids(length(X_coords), length(Y_coords))
-    dim(sf_polygons) <- c(x = length(X_coords), y = length(Y_coords))
-
-    sf_polygons <- st_as_stars(list(sf_polygons = sf_polygons),
-                               dimensions = st_dimensions(x = as.numeric(X_coords),
-                                                          y = as.numeric(Y_coords),
-                                                          .raster = c("x", "y"),
-                                                          cell_midpoints = TRUE))
   }
+
   st_crs(sf_polygons) <- st_crs(prj)
 
   sf_polygons <- st_as_sf(sf_polygons, as_points = FALSE)
@@ -151,48 +148,55 @@ create_cell_geometry <- function(X_coords, Y_coords, prj,
   return(sf_polygons)
 }
 
-construct_points <- function(x, y, i_ind = NULL, j_ind = NULL, prj, array_mode) {
+construct_points <- function(x, y, i_ind = NULL, j_ind = NULL, prj) {
 
-  if(array_mode) {
-    if(is.null(i_ind)) {
-      i_ind <- matrix(rep(c(1:ncol(x)), nrow(x)),
-                      nrow = nrow(x), ncol = ncol(x),
-                      byrow = TRUE)
+  x_vals <- matrix(x, nrow = length(y), ncol = length(x),
+                   byrow = T)
+  y_vals <- matrix(y, nrow = length(y), ncol = length(x),
+                   byrow = F)
 
-      j_ind <- matrix(rep(c(1:nrow(x)), ncol(x)),
-                      nrow = nrow(x), ncol = ncol(x),
-                      byrow = FALSE)
-    }
-    x_vals <- x
-    y_vals <- y
-  } else {
-
-    x_vals <- matrix(x, nrow = length(y), ncol = length(x),
-                     byrow = T)
-    y_vals <- matrix(y, nrow = length(y), ncol = length(x),
-                     byrow = F)
-
-    if(is.null(i_ind)) {
-      i_ind <- c(1:ncol(x_vals))
-      j_ind <- c(1:nrow(x_vals))
-    }
+  if(is.null(i_ind)) {
+    i_ind <- c(1:ncol(x_vals))
+    j_ind <- c(1:nrow(x_vals))
   }
 
+  get_points(x_vals, y_vals, i_ind, j_ind, prj)
+}
+
+construct_points_array <- function(x, y, i_ind = NULL, j_ind = NULL, prj) {
+
+  if(is.null(i_ind)) {
+    i_ind <- matrix(rep(c(1:ncol(x)), nrow(x)),
+                    nrow = nrow(x), ncol = ncol(x),
+                    byrow = TRUE)
+
+    j_ind <- matrix(rep(c(1:nrow(x)), ncol(x)),
+                    nrow = nrow(x), ncol = ncol(x),
+                    byrow = FALSE)
+  }
+  x_vals <- x
+  y_vals <- y
+
+  get_points(x_vals, y_vals, i_ind, j_ind, prj)
+
+}
+
+get_points <- function(x_vals, y_vals, i_ind, j_ind, prj) {
   if(length(i_ind) == nrow(x_vals)) {
     warning("Rows and columns flipped? Check output for valid indices.")
     i_ind_matrix <- matrix(rep(i_ind, ncol(x_vals)),
-                    nrow = ncol(x_vals), ncol = nrow(x_vals),
-                    byrow = TRUE)
+                           nrow = ncol(x_vals), ncol = nrow(x_vals),
+                           byrow = TRUE)
     j_ind_matrix <- matrix(rep(j_ind, nrow(x_vals)),
-                    nrow = ncol(x_vals), ncol = nrow(x_vals),
-                    byrow = FALSE)
+                           nrow = ncol(x_vals), ncol = nrow(x_vals),
+                           byrow = FALSE)
   } else {
     i_ind_matrix <- matrix(rep(i_ind, nrow(x_vals)),
-                    nrow = nrow(x_vals), ncol = ncol(x_vals),
-                    byrow = TRUE)
+                           nrow = nrow(x_vals), ncol = ncol(x_vals),
+                           byrow = TRUE)
     j_ind_matrix <- matrix(rep(j_ind, ncol(x_vals)),
-                    nrow = nrow(x_vals), ncol = ncol(x_vals),
-                    byrow = FALSE)
+                           nrow = nrow(x_vals), ncol = ncol(x_vals),
+                           byrow = FALSE)
   }
 
   sf_points <- st_as_sf(data.frame(x = matrix(x_vals, ncol = 1),

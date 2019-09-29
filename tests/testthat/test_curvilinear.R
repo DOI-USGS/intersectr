@@ -15,6 +15,16 @@ test_that("curvilinear", {
   cell_geometry <- suppressWarnings(
     create_cell_geometry(var.get.nc(nc, nc_coord_vars$X, unpack = TRUE),
                          var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE),
+                         "+init=epsg:4326"))
+
+  cell_geometry <- suppressWarnings(
+    create_cell_geometry(var.get.nc(nc, nc_coord_vars$X, unpack = TRUE),
+                         var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE),
+                         "+init=epsg:4326", st_transform(cell_geometry, 5070)))
+
+  cell_geometry <- suppressWarnings(
+    create_cell_geometry(var.get.nc(nc, nc_coord_vars$X, unpack = TRUE),
+                         var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE),
                          "+init=epsg:4326", geom))
 
   expect_true(nrow(cell_geometry) == 340)
@@ -23,6 +33,7 @@ test_that("curvilinear", {
     create_cell_geometry(var.get.nc(nc, nc_coord_vars$X, unpack = TRUE),
                          var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE),
                          "+init=epsg:4326", geom, 10000))
+  close.nc(nc)
 
   expect_true(nrow(cell_geometry) == 700)
 
@@ -37,7 +48,7 @@ test_that("curvilinear", {
                                       cell_geometry, nc_coord_vars$X, nc_coord_vars$Y, nc_coord_vars$T))
 
   expect_equal(intersected$`1832`[intersected$time_stamp == as.POSIXct("2018-09-14 15:00:00", tz = "UTC")],
-               0.77, tolerance = 0.1)
+               0.7737, tolerance = 0.001)
 
   nc_file <- system.file("extdata/test_stageiv_xyt_borked.nc", package = "intersectr")
   nc <- open.nc(nc_file)
@@ -45,7 +56,8 @@ test_that("curvilinear", {
   cell_geometry <- suppressWarnings(
     create_cell_geometry(var.get.nc(nc, nc_coord_vars$X, unpack = TRUE),
                          var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE),
-                         "+init=epsg:4326", geom))
+                         "+init=epsg:4326", geom, 10000))
+  close.nc(nc)
 
   data_source_cells <- st_sf(select(cell_geometry, grid_ids))
 
@@ -58,7 +70,7 @@ test_that("curvilinear", {
                                                        nc_coord_vars$Y, nc_coord_vars$T))
 
   expect_equal(intersected$`1832`[intersected$time_stamp == as.POSIXct("2018-09-14 15:00:00", tz = "UTC")],
-               0.77, tolerance = 0.1)
+               0.7737, tolerance = 0.001)
 })
 
 test_that("curvilinear", {
@@ -71,7 +83,7 @@ test_that("curvilinear", {
   cell_geometry <- suppressWarnings(
     create_cell_geometry(var.get.nc(nc, nc_coord_vars$X, unpack = TRUE),
                          var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE),
-                         "+init=epsg:4326", flip = TRUE))
+                         "+init=epsg:4326"))
 
   geom <- cell_geometry[530:600, ]
 

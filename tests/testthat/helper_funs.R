@@ -1,3 +1,10 @@
+suppressMessages({
+  library("sf")
+  library("dplyr")
+  library("RNetCDF")
+  library("ncmeta")
+  })
+
 # Code to run the writer function in isolation
 # file_handle <- "test.nc"
 # var_meta <- list(name = "test", units = "mm", long_name = "test_long", ids = c("1", "2", "3"))

@@ -1,7 +1,6 @@
 context("curvilinear")
 
 test_that("curvilinear", {
-  library(ncmeta)
   nc_file <- system.file("nc/test_stageiv_xyt.nc", package = "stars")
 
   nc_var <- nc_vars(nc_file)
@@ -9,56 +8,63 @@ test_that("curvilinear", {
 
   nc_coord_vars <- nc_coord_var(nc_file, variable_name)
 
-  x_var <- nc_coord_vars$X
-  y_var <- nc_coord_vars$Y
-  t_var <- nc_coord_vars$T
+  nc <- open.nc(nc_file)
 
-  nc <- RNetCDF::open.nc(nc_file)
-
-  x <- RNetCDF::var.get.nc(nc, x_var, unpack = TRUE)
-  y <- RNetCDF::var.get.nc(nc, y_var, unpack = TRUE)
-
-  geom <- sf::read_sf(system.file("shape/nc.shp", package = "sf")) %>%
-    st_transform(5070)
-
-  geom <- geom[5, ]
-
-  in_prj <- "+init=epsg:4326"
+  geom <- st_transform(sf::read_sf(system.file("shape/nc.shp", package = "sf")), 5070)[5, ]
 
   cell_geometry <- suppressWarnings(
-    create_cell_geometry(x, y, in_prj, geom))
+    create_cell_geometry(var.get.nc(nc, nc_coord_vars$X, unpack = TRUE),
+                         var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE),
+                         "+init=epsg:4326"))
+
+  cell_geometry2 <- suppressWarnings(
+    create_cell_geometry(var.get.nc(nc, nc_coord_vars$X, unpack = TRUE),
+                         var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE),
+                         "+init=epsg:4326", st_transform(cell_geometry, 5070)))
+
+  expect_true(all(cell_geometry$X_ind == cell_geometry2$X_ind))
+
+  expect_equivalent(st_coordinates(cell_geometry), st_coordinates(cell_geometry2))
+
+  expect_equal(cell_geometry$X_ind[1:5], c(1, 2, 3, 4, 5))
+  expect_equal(cell_geometry$Y_ind[1:5], c(1, 1, 1, 1, 1))
+
+  cell_geometry <- suppressWarnings(
+    create_cell_geometry(var.get.nc(nc, nc_coord_vars$X, unpack = TRUE),
+                         var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE),
+                         "+init=epsg:4326", geom))
 
   expect_true(nrow(cell_geometry) == 340)
 
   cell_geometry <- suppressWarnings(
-    create_cell_geometry(x, y, in_prj, geom, 10000))
+    create_cell_geometry(var.get.nc(nc, nc_coord_vars$X, unpack = TRUE),
+                         var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE),
+                         "+init=epsg:4326", geom, 10000))
+  close.nc(nc)
 
   expect_true(nrow(cell_geometry) == 700)
 
   data_source_cells <- st_sf(select(cell_geometry, grid_ids))
   target_polygons <- st_sf(select(geom, CNTY_ID))
 
-  sf::st_agr(data_source_cells) <- "constant"
-  sf::st_agr(target_polygons) <- "constant"
-
   area_weights <- calculate_area_intersection_weights(
     data_source_cells,
     target_polygons)
 
   suppressWarnings(intersected <- execute_intersection(nc_file, variable_name, area_weights,
-                                      cell_geometry, x_var, y_var, t_var))
+                                      cell_geometry, nc_coord_vars$X, nc_coord_vars$Y, nc_coord_vars$T))
 
   expect_equal(intersected$`1832`[intersected$time_stamp == as.POSIXct("2018-09-14 15:00:00", tz = "UTC")],
-               0.77, tolerance = 0.1)
+               0.7737, tolerance = 0.001)
 
   nc_file <- system.file("extdata/test_stageiv_xyt_borked.nc", package = "intersectr")
-  nc <- RNetCDF::open.nc(nc_file)
-
-  x <- RNetCDF::var.get.nc(nc, x_var, unpack = TRUE)
-  y <- RNetCDF::var.get.nc(nc, y_var, unpack = TRUE)
+  nc <- open.nc(nc_file)
 
   cell_geometry <- suppressWarnings(
-    create_cell_geometry(x, y, in_prj, geom))
+    create_cell_geometry(var.get.nc(nc, nc_coord_vars$X, unpack = TRUE),
+                         var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE),
+                         "+init=epsg:4326", geom, 10000))
+  close.nc(nc)
 
   data_source_cells <- st_sf(select(cell_geometry, grid_ids))
 
@@ -67,75 +73,66 @@ test_that("curvilinear", {
     target_polygons)
 
   suppressWarnings(intersected <- execute_intersection(nc_file, variable_name, area_weights,
-                                                       cell_geometry, x_var, y_var, t_var))
+                                                       cell_geometry, nc_coord_vars$X,
+                                                       nc_coord_vars$Y, nc_coord_vars$T))
 
   expect_equal(intersected$`1832`[intersected$time_stamp == as.POSIXct("2018-09-14 15:00:00", tz = "UTC")],
-               0.77, tolerance = 0.1)
-
-  # cell_geometry_2 <- cell_geometry
-  # cell_geometry_2$geometry <- cell_geometry_2$geometry + 500
-  #
-  # target_polygons <- st_sf(select(cell_geometry_2, grid_ids_2 = grid_ids))
-  #
-  # area_weights <- calculate_area_intersection_weights(
-  #   data_source_cells,
-  #   target_polygons)
-  #
-  # suppressWarnings(intersected <- execute_intersection(nc_file, variable_name, area_weights,
-  #                                                      cell_geometry, x_var, y_var, t_var))
+               0.7737, tolerance = 0.001)
 })
 
 test_that("curvilinear", {
-  library(ncmeta)
   nc_file <- system.file("extdata/c201923412.out1_4.nc", package = "intersectr")
-
-  nc_var <- nc_vars(nc_file)
-  variable_name <- nc_var$name[4]
+  variable_name <- "wvh"
+  nc <- open.nc(nc_file)
 
   nc_coord_vars <- nc_coord_var(nc_file, variable_name)
 
-  x_var <- nc_coord_vars$X
-  y_var <- nc_coord_vars$Y
-  t_var <- nc_coord_vars$T
-
-  nc <- RNetCDF::open.nc(nc_file)
-
-  x <- RNetCDF::var.get.nc(nc, x_var, unpack = TRUE)
-  y <- RNetCDF::var.get.nc(nc, y_var, unpack = TRUE)
-
-  in_prj <- "+init=epsg:4326"
+  x <- var.get.nc(nc, nc_coord_vars$X, unpack = TRUE)
+  y <- var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE)
 
   cell_geometry <- suppressWarnings(
-    create_cell_geometry(x, y, in_prj))
+    create_cell_geometry(x, y, "+init=epsg:4326"))
 
   geom <- cell_geometry[530:600, ]
 
   data_source_cells <- st_transform(st_sf(select(cell_geometry, grid_ids)), 5070)
   target_polygons <- st_transform(st_sf(select(geom, ids = grid_ids)), 5070)
 
-  sf::st_agr(data_source_cells) <- "constant"
-  sf::st_agr(target_polygons) <- "constant"
-
   area_weights <- calculate_area_intersection_weights(
     data_source_cells,
     target_polygons)
 
   suppressWarnings(intersected <- execute_intersection(nc_file, variable_name, area_weights,
-                                                       cell_geometry, x_var, y_var, t_var))
+                                                       cell_geometry, nc_coord_vars$X,
+                                                       nc_coord_vars$Y, nc_coord_vars$T))
 
   expect_equal(ncol(intersected), 72)
+
+  geom["data"] <- as.numeric(intersected[, 2:ncol(intersected)])
+  geom$data[geom$data == -99999] <- NA
+  geom <- st_transform(geom, 5070)
+
+  check_row <- st_transform(geom[15, ], 4326)
+  mid <- st_sfc(st_point(c(mean(st_coordinates(check_row)[1:4, 1]),
+                           mean(st_coordinates(check_row)[1:4, 2]))), crs = 4326)
+
+  x_inds <- which(abs((x - st_coordinates(mid)[1,1])) == min(abs((x - st_coordinates(mid)[1,1]))), arr.ind = TRUE)
+  y_inds <- which(abs((y - st_coordinates(mid)[1,2])) == min(abs((y - st_coordinates(mid)[1,2]))), arr.ind = TRUE)
+
+  x_ind <- unique(x_inds[which(x_inds[, 1] %in% y_inds[, 1]), 1])
+  y_ind <- unique(y_inds[which(x_inds[, 2] %in% y_inds[, 2]), 2])
+
+  val <- var.get.nc(nc, variable_name, c(x_ind, y_ind, 1), c(1,1,1))
+
+  expect_equal(check_row$data, as.numeric(val))
 
   # dat <- stars::read_ncdf(nc_file)
   # dat$wvh[dat$wvh == units::set_units(-99999, "m")] <- units::set_units(NA, "m")
   # dat <- st_transform(dat, 5070)
   # dat <- st_as_sf(dat)
   # plot(st_geometry(dat))
-  # plot(dat["2019-08-22 14:00:00"], border = NA, add = TRUE)
+  # plot(dat["2019-08-22 13:00:00"], border = NA, add = TRUE)
   #
-  #
-  # geom["data"] <- as.numeric(intersected[, 2:ncol(intersected)])
-  # geom$data[geom$data == -99999] <- NA
-  # geom <- st_transform(geom, 5070)
   # plot(geom["data"], add = TRUE)
 
 })

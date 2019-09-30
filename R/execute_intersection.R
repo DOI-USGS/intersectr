@@ -104,11 +104,11 @@ execute_intersection <- function(nc_file,
 
   rm(cell_geometry)
 
-  ids <- as.integer(matrix(get_ids(length(ri$X), length(ri$Y)),
+  ids <- as.integer(matrix(get_ids(length(ri$X$x_inds), length(ri$Y$y_inds)),
                            ncol = 1,
                            byrow = FALSE))
 
-  out_nrows <- length(ri$T)
+  out_nrows <- length(ri$T$t_inds)
 
     out_ncols <- length(unique(intersection_weights[, 2][[1]]))
 
@@ -242,14 +242,12 @@ get_request_inds <- function(min_x, max_x, min_y, max_y,
     X_inds_dim <- X_var_info$dimids[1]
     Y_inds_dim <- X_var_info$dimids[2]
     T_inds_dim <- T_var_info$dimids
-    # This whole thing needs to be refactored.
-    if(X_inds_dim > Y_inds_dim &
-       all(dimid_order[1:2] == c(1, 2)) &
-       X_inds_dim < 2) {
-      Y_inds <- seq(min_x, max_x, 1)
-      X_inds <- seq(min_y, max_y, 1)
-    }
+
   } else {
+    X_inds_dim <- X_var_info$dimids
+    Y_inds_dim <- Y_var_info$dimids
+    T_inds_dim <- T_var_info$dimids
+
     dimid_order <- match(nc_var_info$dimids,
                          c(X_var_info$dimids,
                            Y_var_info$dimids,
@@ -273,7 +271,7 @@ get_request_inds <- function(min_x, max_x, min_y, max_y,
 
   }
 
-  return(list(time_steps = time_steps, X = X_inds, Y = Y_inds, `T` = T_inds, dimid_order = dimid_order))
+  return(list(time_steps = time_steps, X = list(x_dim = X_inds_dim, x_inds = X_inds), Y = list(y_dim = Y_inds_dim, y_inds = Y_inds), `T` = list(t_dim = T_inds_dim, t_inds = T_inds), dimid_order = dimid_order))
 
 }
 
@@ -315,9 +313,9 @@ get_dap_url <- function(min_x, max_x, min_y, max_y,
 
   get_range <- function(min, max) sprintf("[%s:%s]", min, max)
 
-  X_range <- get_range(min(ri$X), max(ri$X))
-  Y_range <- get_range(min(ri$Y), max(ri$Y))
-  T_range <- get_range(min(ri$T), max(ri$T))
+  X_range <- get_range(min(ri$X$x_inds), max(ri$X$x_inds))
+  Y_range <- get_range(min(ri$Y$y_inds), max(ri$Y$y_inds))
+  T_range <- get_range(min(ri$T$t_inds), max(ri$T$t_inds))
 
   # OPeNDAP uses reverse order from RNetCDF so TYX here.
   var_inds <- paste0(c(T_range, Y_range, X_range)[ri$dimid_order], collapse = "")
@@ -332,8 +330,8 @@ get_dap_url <- function(min_x, max_x, min_y, max_y,
 
 get_i_data <- function(i, nc, variable_name, ri, transpose, intersection_weights, join_indices) {
   i_data <- var.get.nc(nc, variable_name,
-                       start = c(min(ri$X), min(ri$Y), ri$T[i])[ri$dimid_order],
-                       count = c(length(ri$X), length(ri$Y), 1)[ri$dimid_order],
+                       start = c(min(ri$X$x_inds), min(ri$Y$y_inds), ri$T$t_inds[i])[ri$dimid_order],
+                       count = c(length(ri$X$x_inds), length(ri$Y$y_inds), 1)[ri$dimid_order],
                        unpack = TRUE)
 
   if(transpose) i_data <- t(i_data)

@@ -1,7 +1,6 @@
 context("1d lat/lon")
 
 test_that("1d lat/lon", {
-  library(ncmeta)
   nc_file <- system.file("extdata/metdata.nc", package = "intersectr")
 
   nc_var <- nc_vars(nc_file)

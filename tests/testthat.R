@@ -1,6 +1,4 @@
 library("testthat")
 library("intersectr")
-library("sf")
-library("dplyr")
-library("RNetCDF")
+
 test_check("intersectr")

@@ -17,10 +17,17 @@ test_that("curvilinear", {
                          var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE),
                          "+init=epsg:4326"))
 
-  cell_geometry <- suppressWarnings(
+  cell_geometry2 <- suppressWarnings(
     create_cell_geometry(var.get.nc(nc, nc_coord_vars$X, unpack = TRUE),
                          var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE),
                          "+init=epsg:4326", st_transform(cell_geometry, 5070)))
+
+  expect_true(all(cell_geometry$X_ind == cell_geometry2$X_ind))
+
+  expect_equivalent(st_coordinates(cell_geometry), st_coordinates(cell_geometry2))
+
+  expect_equal(cell_geometry$X_ind[1:5], c(1, 2, 3, 4, 5))
+  expect_equal(cell_geometry$Y_ind[1:5], c(1, 1, 1, 1, 1))
 
   cell_geometry <- suppressWarnings(
     create_cell_geometry(var.get.nc(nc, nc_coord_vars$X, unpack = TRUE),
@@ -80,10 +87,11 @@ test_that("curvilinear", {
 
   nc_coord_vars <- nc_coord_var(nc_file, variable_name)
 
+  x <- var.get.nc(nc, nc_coord_vars$X, unpack = TRUE)
+  y <- var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE)
+
   cell_geometry <- suppressWarnings(
-    create_cell_geometry(var.get.nc(nc, nc_coord_vars$X, unpack = TRUE),
-                         var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE),
-                         "+init=epsg:4326"))
+    create_cell_geometry(x, y, "+init=epsg:4326"))
 
   geom <- cell_geometry[530:600, ]
 
@@ -100,17 +108,31 @@ test_that("curvilinear", {
 
   expect_equal(ncol(intersected), 72)
 
+  geom["data"] <- as.numeric(intersected[, 2:ncol(intersected)])
+  geom$data[geom$data == -99999] <- NA
+  geom <- st_transform(geom, 5070)
+
+  check_row <- st_transform(geom[15, ], 4326)
+  mid <- st_sfc(st_point(c(mean(st_coordinates(check_row)[1:4, 1]),
+                           mean(st_coordinates(check_row)[1:4, 2]))), crs = 4326)
+
+  x_inds <- which(abs((x - st_coordinates(mid)[1,1])) == min(abs((x - st_coordinates(mid)[1,1]))), arr.ind = TRUE)
+  y_inds <- which(abs((y - st_coordinates(mid)[1,2])) == min(abs((y - st_coordinates(mid)[1,2]))), arr.ind = TRUE)
+
+  x_ind <- unique(x_inds[which(x_inds[, 1] %in% y_inds[, 1]), 1])
+  y_ind <- unique(y_inds[which(x_inds[, 2] %in% y_inds[, 2]), 2])
+
+  val <- var.get.nc(nc, variable_name, c(x_ind, y_ind, 1), c(1,1,1))
+
+  expect_equal(check_row$data, as.numeric(val))
+
   # dat <- stars::read_ncdf(nc_file)
   # dat$wvh[dat$wvh == units::set_units(-99999, "m")] <- units::set_units(NA, "m")
   # dat <- st_transform(dat, 5070)
   # dat <- st_as_sf(dat)
   # plot(st_geometry(dat))
-  # plot(dat["2019-08-22 14:00:00"], border = NA, add = TRUE)
+  # plot(dat["2019-08-22 13:00:00"], border = NA, add = TRUE)
   #
-  #
-  # geom["data"] <- as.numeric(intersected[, 2:ncol(intersected)])
-  # geom$data[geom$data == -99999] <- NA
-  # geom <- st_transform(geom, 5070)
   # plot(geom["data"], add = TRUE)
 
 })

@@ -186,7 +186,6 @@ construct_points_array <- function(x, y, i_ind = NULL, j_ind = NULL, prj) {
 
 get_points <- function(x_vals, y_vals, i_ind, j_ind, prj) {
   if(length(i_ind) == nrow(x_vals)) {
-    warning("Rows and columns flipped? Check output for valid indices.")
     j_ind_m <- matrix(rep(i_ind, ncol(x_vals)),
                     nrow = nrow(x_vals), ncol = ncol(x_vals),
                     byrow = FALSE)

@@ -88,7 +88,7 @@ create_cell_geometry <- function(X_coords, Y_coords, prj,
       Y_coords <- Y_coords[j_ind]
     }
 
-    sf_points <-construct_points(X_coords, Y_coords, i_ind, j_ind, prj)
+    sf_points <- construct_points(X_coords, Y_coords, i_ind, j_ind, prj)
 
     sf_polygons <- get_ids(length(X_coords), length(Y_coords))
     dim(sf_polygons) <- c(x = length(X_coords), y = length(Y_coords))

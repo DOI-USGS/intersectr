@@ -7,7 +7,7 @@
 get_timerange(nc_file, t_var)
 }
 \arguments{
-\item{nc_file}{character path or url to a NetCDF source}
+\item{nc_file}{character path or url to a NetCDF source or open netcddf object}
 
 \item{t_var}{character name of time variable}
 }

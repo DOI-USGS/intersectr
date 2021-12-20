@@ -4,10 +4,21 @@
 \alias{execute_intersection}
 \title{Execute Intersection}
 \usage{
-execute_intersection(nc_file, variable_name, intersection_weights,
-  cell_geometry, x_var, y_var, t_var, start_datetime = NULL,
-  end_datetime = NULL, status = FALSE, writer_fun = NULL,
-  out_file = NULL, out_var_meta = NULL)
+execute_intersection(
+  nc_file,
+  variable_name,
+  intersection_weights,
+  cell_geometry,
+  x_var,
+  y_var,
+  t_var,
+  start_datetime = NULL,
+  end_datetime = NULL,
+  status = FALSE,
+  writer_fun = NULL,
+  out_file = NULL,
+  out_var_meta = NULL
+)
 }
 \arguments{
 \item{nc_file}{character path or OPeNDAP URL to NetCDF source}

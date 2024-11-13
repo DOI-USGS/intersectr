@@ -3,7 +3,6 @@
 #' @param nc_file character path or url to a NetCDF source or open netcddf object
 #' @param t_var character name of time variable
 #' @export
-#' @importFrom RNetCDF open.nc var.inq.nc utcal.nc close.nc att.get.nc var.get.nc
 #'
 #' @examples
 #' nc_file <- system.file("extdata/metdata.nc", package = "intersectr")
@@ -12,16 +11,16 @@
 get_timerange <- function(nc_file, t_var) {
 
   if(!inherits(nc_file, "NetCDF")) {
-    nc <- open.nc(nc_file)
-    on.exit(close.nc(nc), add = TRUE)
+    nc <- rnz::open_nz(nc_file)
+    on.exit(rnz::close_nz(nc), add = TRUE)
   } else {
     nc <- nc_file
   }
 
 
-  T_var_info <- var.inq.nc(nc, t_var)
-  time_steps <- utcal.nc(att.get.nc(nc, T_var_info$name, "units"),
-                         var.get.nc(nc, T_var_info$name, unpack = TRUE),
+  T_var_info <- rnz::inq_var(nc, t_var)
+  time_steps <- RNetCDF::utcal.nc(rnz::get_att(nc, T_var_info$name, "units"),
+                         rnz::get_var(nc, T_var_info$name, unpack = TRUE),
                          "c")
 
   return(list(start = time_steps[1], end = time_steps[length(time_steps)]))
@@ -64,4 +63,22 @@ write_ncdf <- function(nc_file, int_data,
                                  data_metadata = list(name = variable_name,
                                                       long_name = variable_long_name))
   return(out_file)
+}
+
+## Also in ncdfgeom
+#' get data source array IDs
+#'
+#' Use IDs to map a NetCDF data source array onto cell geometry IDs
+#'
+#' @param X_dim_size size of dimension containing X coordinates (typically columns)
+#' @param Y_dim_size size of dimension containing Y coordinates (typically rows)
+#' @noRd
+#' @examples
+#' get_ids(5, 7)
+#' matrix(get_ids(5,7), ncol = 1, byrow = FALSE)
+
+get_ids <- function(X_dim_size, Y_dim_size) {
+  matrix(as.numeric(seq(1, X_dim_size * Y_dim_size)),
+         nrow = X_dim_size, ncol = Y_dim_size,
+         byrow = FALSE)
 }

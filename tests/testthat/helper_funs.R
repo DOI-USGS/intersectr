@@ -3,6 +3,7 @@ suppressMessages({
   library("dplyr")
   library("RNetCDF")
   library("ncmeta")
+  library("ncdfgeom")
   })
 
 # Code to run the writer function in isolation
@@ -70,13 +71,13 @@ test_na <- function(nc_file, variable_name, geom) {
 
   suppressWarnings(nc_prj <- ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc_file)))
 
-  nc <- RNetCDF::open.nc(nc_file)
-  X_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$X, unpack = TRUE)
+  nc <- rnz::open_nz(nc_file)
+  X_coords <- rnz::get_var(nc, nc_coord_vars$X, unpack = TRUE)
   X_coords <- seq(from = X_coords[1],
                   to = X_coords[length(X_coords)],
                   along.with = X_coords)
 
-  Y_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE)
+  Y_coords <- rnz::get_var(nc, nc_coord_vars$Y, unpack = TRUE)
   Y_coords <- seq(from = Y_coords[1],
                   to = Y_coords[length(Y_coords)],
                   along.with = Y_coords)

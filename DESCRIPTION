@@ -10,10 +10,10 @@ Description: Package for intersecting spatiotemporal attribute data. The primary
     need to be intersected with a spatial modeling mesh or set of spatial modeling units.
 URL: https://github.com/USGS-R/intersectr
 BugReports: https://github.com/USGS-R/intersectr/issues
-Imports: sf, stars, dplyr, RNetCDF, ncmeta, areal, data.table, ncdfgeom, rgdal
+Imports: sf, stars, dplyr, RNetCDF, rnz, ncmeta, areal, data.table, ncdfgeom
 Remotes: USGS-R/ncdfgeom
 Suggests: testthat, tibble, knitr, rmarkdown, lwgeom
 License: CC0
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.2
+RoxygenNote: 7.3.2

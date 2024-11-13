@@ -53,9 +53,9 @@ The create_cell_geometry function generates an `sf` `data.frame` representing ea
 ```{r cells}
 (nc_prj <- nc_gm_to_prj(nc_grid_mapping_atts(nc_file)))
 
-nc <- open.nc(nc_file)
-X_coords <- var.get.nc(nc, nc_coord_vars$X, unpack = TRUE)
-Y_coords <- var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE)
+nc <- rnz::open_nz(nc_file)
+X_coords <- rnz::get_var(nc, nc_coord_vars$X, unpack = TRUE)
+Y_coords <- rnz::get_var(nc, nc_coord_vars$Y, unpack = TRUE)
 
 (cell_geometry <-
     create_cell_geometry(X_coords = X_coords,
@@ -179,13 +179,13 @@ Y_inds <- seq(min(cell_geometry$Y_ind), max(cell_geometry$Y_ind), 1)
 
 ids <- intersectr:::get_ids(length(X_inds), length(Y_inds))
 
-dates <- utcal.nc(att.get.nc(nc, "time", "units"), 
-                  var.get.nc(nc, "time", unpack = TRUE), 
+dates <- RNetCDF::utcal.nc(rnz::get_att(nc, "time", "units"), 
+                  rnz::get_var(nc, "time", unpack = TRUE), 
                   type = "c")
 
 date_ind <- which(as.character(dates) == date)
 
-grid_data <- var.get.nc(nc, variable_name,
+grid_data <- rnz::get_var(nc, variable_name,
                         start = c(min(X_inds), min(Y_inds), date_ind),
                         count = c(length(X_inds), length(Y_inds), 1), 
                         unpack = TRUE)

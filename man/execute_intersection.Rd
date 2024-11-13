@@ -83,8 +83,10 @@ The function will be called once with step = -1 to indicate the file can be clos
 final return value is discarded and the out_file input is returned.
 }
 \examples{
+library(ncdfgeom)
+
 nc_file <- system.file("extdata/metdata.nc", package = "intersectr")
-nc <- RNetCDF::open.nc(nc_file)
+nc <- rnz::open_nz(nc_file)
 
 variable_name <- "precipitation_amount"
 (cv <- ncmeta::nc_coord_var(nc, variable_name))
@@ -93,8 +95,8 @@ geom <- sf::read_sf(system.file("shape/nc.shp", package = "sf"))[20, ]
 geom <- sf::st_transform(geom, "+init=epsg:5070")
 
 cell_geometry <-
-  create_cell_geometry(X_coords = RNetCDF::var.get.nc(nc, cv$X, unpack = TRUE),
-                       Y_coords = RNetCDF::var.get.nc(nc, cv$Y, unpack = TRUE),
+  create_cell_geometry(X_coords = rnz::get_var(nc, cv$X, unpack = TRUE),
+                       Y_coords = rnz::get_var(nc, cv$Y, unpack = TRUE),
                        prj = ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc)),
                        geom = geom,
                        buffer_dist = 2000)

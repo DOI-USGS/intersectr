@@ -19,7 +19,6 @@
 #' @param writer_fun a function that implements the writer API described in details
 #' @param out_file character path for output file to be used with writer_fun
 #' @param out_var_meta list passed to writer_fun with ids
-#' @importFrom RNetCDF open.nc dim.inq.nc var.inq.nc att.get.nc var.get.nc utcal.nc
 #' @importFrom data.table data.table
 #' @details The writer_fun input can be a function passed in that supports a basic API.
 #' The function should the following inputs:
@@ -51,8 +50,10 @@
 #' @export
 #'
 #' @examples
+#' library(ncdfgeom)
+#'
 #' nc_file <- system.file("extdata/metdata.nc", package = "intersectr")
-#' nc <- RNetCDF::open.nc(nc_file)
+#' nc <- rnz::open_nz(nc_file)
 #'
 #' variable_name <- "precipitation_amount"
 #' (cv <- ncmeta::nc_coord_var(nc, variable_name))
@@ -61,8 +62,8 @@
 #' geom <- sf::st_transform(geom, "+init=epsg:5070")
 #'
 #' cell_geometry <-
-#'   create_cell_geometry(X_coords = RNetCDF::var.get.nc(nc, cv$X, unpack = TRUE),
-#'                        Y_coords = RNetCDF::var.get.nc(nc, cv$Y, unpack = TRUE),
+#'   create_cell_geometry(X_coords = rnz::get_var(nc, cv$X, unpack = TRUE),
+#'                        Y_coords = rnz::get_var(nc, cv$Y, unpack = TRUE),
 #'                        prj = ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc)),
 #'                        geom = geom,
 #'                        buffer_dist = 2000)
@@ -77,7 +78,7 @@
 #' execute_intersection(nc_file, variable_name, area_weights,
 #'                      cell_geometry, cv$X, cv$Y, cv$T)
 #'
-
+#'
 execute_intersection <- function(nc_file,
                                  variable_name,
                                  intersection_weights,
@@ -94,8 +95,8 @@ execute_intersection <- function(nc_file,
 
   intersection_weights <- dplyr::filter(intersection_weights, !is.na(poly_id))
 
-  nc <- open.nc(nc_file)
-  on.exit(close.nc(nc), add = TRUE)
+  nc <- rnz::open_nz(nc_file)
+  on.exit(rnz::close_nz(nc), add = TRUE)
 
   ri <- get_request_inds(min(cell_geometry$X_ind), max(cell_geometry$X_ind),
                          min(cell_geometry$Y_ind), max(cell_geometry$Y_ind),
@@ -160,7 +161,7 @@ execute_intersection <- function(nc_file,
     } else {
       out <- data.frame(out)
 
-      out <- select(out, which(!is.na(out_names)))
+      out <- dplyr::select(out, which(!is.na(out_names)))
 
       out_names <- out_names[which(!is.na(out_names))]
 
@@ -220,13 +221,13 @@ get_request_inds <- function(min_x, max_x, min_y, max_y,
                              nc, variable_name, x_var, y_var,
                              t_var, start_datetime, end_datetime) {
 
-  nc_var_info <- var.inq.nc(nc, variable_name)
+  nc_var_info <- rnz::inq_var(nc, variable_name)
 
   if (nc_var_info$ndims != 3) stop("only 3d variables are supported")
 
-  X_var_info <- var.inq.nc(nc, x_var)
-  Y_var_info <- var.inq.nc(nc, y_var)
-  T_var_info <- var.inq.nc(nc, t_var)
+  X_var_info <- rnz::inq_var(nc, x_var)
+  Y_var_info <- rnz::inq_var(nc, y_var)
+  T_var_info <- rnz::inq_var(nc, t_var)
 
   # (X_inds and Y_inds are the first and second dimensions of 2d coordinate variables)
   X_inds <- seq(min_x, max_x, 1)
@@ -254,8 +255,8 @@ get_request_inds <- function(min_x, max_x, min_y, max_y,
                            T_var_info$dimids))
   }
 
-  time_steps <- utcal.nc(att.get.nc(nc, T_var_info$name, "units"),
-                         var.get.nc(nc, T_var_info$name, unpack = TRUE),
+  time_steps <- RNetCDF::utcal.nc(rnz::get_att(nc, T_var_info$name, "units"),
+                         rnz::get_var(nc, T_var_info$name, unpack = TRUE),
                          "c")
 
   time_steps <- data.frame(time_stamp = time_steps)
@@ -304,8 +305,8 @@ get_dap_url <- function(min_x, max_x, min_y, max_y,
                         nc_file, variable_name, x_var, y_var, t_var,
                         start_datetime, end_datetime) {
 
-  nc <- open.nc(nc_file)
-  on.exit(close.nc(nc), add = TRUE)
+  nc <- rnz::open_nz(nc_file)
+  on.exit(rnz::close_nz(nc), add = TRUE)
 
   ri <- get_request_inds(min_x, max_x, min_y, max_y,
                          nc, variable_name, x_var, y_var,
@@ -329,7 +330,7 @@ get_dap_url <- function(min_x, max_x, min_y, max_y,
 }
 
 get_i_data <- function(i, nc, variable_name, ri, transpose, intersection_weights, join_indices) {
-  i_data <- var.get.nc(nc, variable_name,
+  i_data <- rnz::get_var(nc, variable_name,
                        start = c(min(ri$X$x_inds), min(ri$Y$y_inds), ri$T$t_inds[i])[ri$dimid_order],
                        count = c(length(ri$X$x_inds), length(ri$Y$y_inds), 1)[ri$dimid_order],
                        unpack = TRUE)

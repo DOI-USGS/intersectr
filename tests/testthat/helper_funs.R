@@ -6,6 +6,8 @@ suppressMessages({
   library("ncdfgeom")
   })
 
+sf::sf_use_s2(FALSE)
+
 # Code to run the writer function in isolation
 # file_handle <- "test.nc"
 # var_meta <- list(name = "test", units = "mm", long_name = "test_long", ids = c("1", "2", "3"))
@@ -28,7 +30,7 @@ write_incremental <- function(file_handle,
   date_origin <- "days since 1900-01-01"
 
   if(step == 0) {
-    nc <- RNetCDF::create.nc(file_handle, clobber = FALSE, large = TRUE, prefill = TRUE)
+    nc <- RNetCDF::create.nc(file_handle, clobber = FALSE, prefill = TRUE)
     RNetCDF::dim.def.nc(nc, "time", size[1], unlim = FALSE)
     RNetCDF::dim.def.nc(nc, "hru", size[2], unlim = FALSE)
 

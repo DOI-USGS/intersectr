@@ -57,7 +57,7 @@ test_precise <- function(nc_file, variable_name) {
   dates <- rnz::get_var(nc, "time", unpack = TRUE)
   date_units <- rnz::get_att(nc, "time", "units")
   dates <- RNetCDF::utcal.nc(date_units, dates, type = "c")
-  date_ind <- which(as.character(dates) == "1999-01-01")
+  date_ind <- which(as.character(dates) == "1999-01-31")
 
   nc_var_info <- rnz::inq_var(nc, variable_name)
 
@@ -71,8 +71,8 @@ test_precise <- function(nc_file, variable_name) {
                          T_var_info$dimids))
 
   vals <- rnz::get_var(nc, variable_name,
-                              start = c(geom_2$X_ind, geom_2$Y_ind, date_ind)[dimid_order],
-                              count = c(1, 1, 12)[dimid_order], unpack = TRUE)
+                       start = c(geom_2$X_ind, geom_2$Y_ind, date_ind)[dimid_order],
+                       count = c(1, 1, 12)[dimid_order], unpack = TRUE)
 
   test_that("values come back 1:1 for precise grid cell with time filter", {
     expect_equal(as.numeric(vals), as.numeric(intersected[[as.character(geom_2$grid_ids2)]]))

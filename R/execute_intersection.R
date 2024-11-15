@@ -123,9 +123,13 @@ execute_intersection <- function(nc_file,
       out <- matrix(0, nrow = out_nrows, ncol = out_ncols)
     }
 
+    x_dimid_pos <- which(ri$var_dimids == ri$X$x_dim)
+    y_dimid_pos <- which(ri$var_dimids == ri$Y$y_dim)
+
     transpose <- FALSE
-    # not sure we should really ever have to do this
-    # if(ri$dimid_order[1] > ri$dimid_order[2]) transpose <- TRUE
+
+    # if the data is not on XY order, we need to transpose it
+    if(x_dimid_pos > y_dimid_pos) transpose <- TRUE
 
     intersection_weights <- data.table(intersection_weights)
 
@@ -273,7 +277,11 @@ get_request_inds <- function(min_x, max_x, min_y, max_y,
 
   }
 
-  return(list(time_steps = time_steps, X = list(x_dim = X_inds_dim, x_inds = X_inds), Y = list(y_dim = Y_inds_dim, y_inds = Y_inds), `T` = list(t_dim = T_inds_dim, t_inds = T_inds), dimid_order = dimid_order))
+  return(list(time_steps = time_steps, X = list(x_dim = X_inds_dim, x_inds = X_inds),
+              Y = list(y_dim = Y_inds_dim, y_inds = Y_inds),
+              `T` = list(t_dim = T_inds_dim, t_inds = T_inds),
+              dimid_order = dimid_order,
+              var_dimids = nc_var_info$dimids))
 
 }
 

@@ -111,4 +111,5 @@ area_weights <- calculate_area_intersection_weights(
 execute_intersection(nc_file, variable_name, area_weights,
                      cell_geometry, cv$X, cv$Y, cv$T)
 
+
 }

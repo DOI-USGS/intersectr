@@ -124,7 +124,8 @@ execute_intersection <- function(nc_file,
     }
 
     transpose <- FALSE
-    if(ri$dimid_order[1] > ri$dimid_order[2]) transpose <- TRUE
+    # not sure we should really ever have to do this
+    # if(ri$dimid_order[1] > ri$dimid_order[2]) transpose <- TRUE
 
     intersection_weights <- data.table(intersection_weights)
 
@@ -330,6 +331,7 @@ get_dap_url <- function(min_x, max_x, min_y, max_y,
 }
 
 get_i_data <- function(i, nc, variable_name, ri, transpose, intersection_weights, join_indices) {
+
   i_data <- rnz::get_var(nc, variable_name,
                        start = c(min(ri$X$x_inds), min(ri$Y$y_inds), ri$T$t_inds[i])[ri$dimid_order],
                        count = c(length(ri$X$x_inds), length(ri$Y$y_inds), 1)[ri$dimid_order],

@@ -33,7 +33,7 @@ analysis_projection <- "+init=epsg:5070"
 
 # Use a sample file from the package.
 nc_file <- system.file("extdata/daymet.nc", package = "intersectr")
-nc <- open.nc(nc_file)
+nc <- rnz::open_nz(nc_file)
 
 # Use a sample geometry from sf.
 geom <- sf::read_sf(system.file("shape/nc.shp", package = "sf")) %>%
@@ -48,8 +48,8 @@ variable_name <- "prcp"
 
 # Pull out the coordinate variables and get them in projection units.
 meters_per_km <- 1000
-x <- var.get.nc(nc, nc_coord_vars$X, unpack = TRUE) * meters_per_km
-y <- var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE) * meters_per_km
+x <- rnz::get_var(nc, nc_coord_vars$X, unpack = TRUE) * meters_per_km
+y <- rnz::get_var(nc, nc_coord_vars$Y, unpack = TRUE) * meters_per_km
 
 # Create cell geometry for this geom
 cell_geometry <- create_cell_geometry(X_coords = x, 
@@ -83,7 +83,7 @@ Y_inds <- seq(min(cell_geometry$Y_ind), max(cell_geometry$Y_ind), 1)
 
 ids <- intersectr:::get_ids(length(X_inds), length(Y_inds))
 
-grid_data <- var.get.nc(nc, variable_name,
+grid_data <- rnz::get_var(nc, variable_name,
                                  start = c(min(X_inds), min(Y_inds), 3),
                                  count = c(length(X_inds), length(Y_inds), 1), 
                         unpack = TRUE)

@@ -3,7 +3,10 @@ suppressMessages({
   library("dplyr")
   library("RNetCDF")
   library("ncmeta")
+  library("ncdfgeom")
   })
+
+sf::sf_use_s2(FALSE)
 
 # Code to run the writer function in isolation
 # file_handle <- "test.nc"
@@ -27,7 +30,7 @@ write_incremental <- function(file_handle,
   date_origin <- "days since 1900-01-01"
 
   if(step == 0) {
-    nc <- RNetCDF::create.nc(file_handle, clobber = FALSE, large = TRUE, prefill = TRUE)
+    nc <- RNetCDF::create.nc(file_handle, clobber = FALSE, prefill = TRUE)
     RNetCDF::dim.def.nc(nc, "time", size[1], unlim = FALSE)
     RNetCDF::dim.def.nc(nc, "hru", size[2], unlim = FALSE)
 
@@ -70,13 +73,13 @@ test_na <- function(nc_file, variable_name, geom) {
 
   suppressWarnings(nc_prj <- ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc_file)))
 
-  nc <- RNetCDF::open.nc(nc_file)
-  X_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$X, unpack = TRUE)
+  nc <- rnz::open_nz(nc_file)
+  X_coords <- rnz::get_var(nc, nc_coord_vars$X, unpack = TRUE)
   X_coords <- seq(from = X_coords[1],
                   to = X_coords[length(X_coords)],
                   along.with = X_coords)
 
-  Y_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE)
+  Y_coords <- rnz::get_var(nc, nc_coord_vars$Y, unpack = TRUE)
   Y_coords <- seq(from = Y_coords[1],
                   to = Y_coords[length(Y_coords)],
                   along.with = Y_coords)

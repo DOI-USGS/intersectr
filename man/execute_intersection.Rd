@@ -4,10 +4,21 @@
 \alias{execute_intersection}
 \title{Execute Intersection}
 \usage{
-execute_intersection(nc_file, variable_name, intersection_weights,
-  cell_geometry, x_var, y_var, t_var, start_datetime = NULL,
-  end_datetime = NULL, status = FALSE, writer_fun = NULL,
-  out_file = NULL, out_var_meta = NULL)
+execute_intersection(
+  nc_file,
+  variable_name,
+  intersection_weights,
+  cell_geometry,
+  x_var,
+  y_var,
+  t_var,
+  start_datetime = NULL,
+  end_datetime = NULL,
+  status = FALSE,
+  writer_fun = NULL,
+  out_file = NULL,
+  out_var_meta = NULL
+)
 }
 \arguments{
 \item{nc_file}{character path or OPeNDAP URL to NetCDF source}
@@ -72,8 +83,10 @@ The function will be called once with step = -1 to indicate the file can be clos
 final return value is discarded and the out_file input is returned.
 }
 \examples{
+library(ncdfgeom)
+
 nc_file <- system.file("extdata/metdata.nc", package = "intersectr")
-nc <- RNetCDF::open.nc(nc_file)
+nc <- rnz::open_nz(nc_file)
 
 variable_name <- "precipitation_amount"
 (cv <- ncmeta::nc_coord_var(nc, variable_name))
@@ -82,8 +95,8 @@ geom <- sf::read_sf(system.file("shape/nc.shp", package = "sf"))[20, ]
 geom <- sf::st_transform(geom, "+init=epsg:5070")
 
 cell_geometry <-
-  create_cell_geometry(X_coords = RNetCDF::var.get.nc(nc, cv$X, unpack = TRUE),
-                       Y_coords = RNetCDF::var.get.nc(nc, cv$Y, unpack = TRUE),
+  create_cell_geometry(X_coords = rnz::get_var(nc, cv$X, unpack = TRUE),
+                       Y_coords = rnz::get_var(nc, cv$Y, unpack = TRUE),
                        prj = ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc)),
                        geom = geom,
                        buffer_dist = 2000)
@@ -97,5 +110,6 @@ area_weights <- calculate_area_intersection_weights(
 
 execute_intersection(nc_file, variable_name, area_weights,
                      cell_geometry, cv$X, cv$Y, cv$T)
+
 
 }

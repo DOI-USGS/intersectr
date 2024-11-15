@@ -13,10 +13,10 @@ test_that("1d projected", {
   y_var <- nc_coord_vars$Y
   t_var <- nc_coord_vars$T
 
-  nc <- RNetCDF::open.nc(nc_file)
+  nc <- rnz::open_nz(nc_file)
 
-  x <- RNetCDF::var.get.nc(nc, x_var, unpack = TRUE) * 1000
-  y <- RNetCDF::var.get.nc(nc, y_var, unpack = TRUE) * 1000
+  x <- rnz::get_var(nc, x_var, unpack = TRUE) * 1000
+  y <- rnz::get_var(nc, y_var, unpack = TRUE) * 1000
 
   geom <- sf::read_sf(system.file("shape/nc.shp", package = "sf")) %>%
     st_transform(5070) %>%
@@ -65,10 +65,10 @@ test_that("1d projected", {
   #
   # suppressWarnings(nc_coord_vars <- nc_coord_var(nc_file, variable_name))
   #
-  # nc <- RNetCDF::open.nc(nc_file)
+  # nc <- rnz::open_nz(nc_file)
   # nc_prj <- ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc_file))
-  # X_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$X[2], unpack = TRUE)
-  # Y_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$Y[2], unpack = TRUE)
+  # X_coords <- rnz::get_var(nc, nc_coord_vars$X[2], unpack = TRUE)
+  # Y_coords <- rnz::get_var(nc, nc_coord_vars$Y[2], unpack = TRUE)
 
   test_data <- readRDS("data/daymet_cell_test.rds")
 

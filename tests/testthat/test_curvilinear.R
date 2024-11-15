@@ -8,18 +8,18 @@ test_that("curvilinear", {
 
   nc_coord_vars <- nc_coord_var(nc_file, variable_name)
 
-  nc <- open.nc(nc_file)
+  nc <- rnz::open_nz(nc_file)
 
   geom <- st_transform(sf::read_sf(system.file("shape/nc.shp", package = "sf")), 5070)[5, ]
 
   cell_geometry <- suppressWarnings(
-    create_cell_geometry(var.get.nc(nc, nc_coord_vars$X, unpack = TRUE),
-                         var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE),
+    create_cell_geometry(rnz::get_var(nc, nc_coord_vars$X, unpack = TRUE),
+                         rnz::get_var(nc, nc_coord_vars$Y, unpack = TRUE),
                          "+init=epsg:4326"))
 
   cell_geometry2 <- suppressWarnings(
-    create_cell_geometry(var.get.nc(nc, nc_coord_vars$X, unpack = TRUE),
-                         var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE),
+    create_cell_geometry(rnz::get_var(nc, nc_coord_vars$X, unpack = TRUE),
+                         rnz::get_var(nc, nc_coord_vars$Y, unpack = TRUE),
                          "+init=epsg:4326", st_transform(cell_geometry, 5070)))
 
   expect_true(all(cell_geometry$X_ind == cell_geometry2$X_ind))
@@ -30,17 +30,17 @@ test_that("curvilinear", {
   expect_equal(cell_geometry$Y_ind[1:5], c(1, 1, 1, 1, 1))
 
   cell_geometry <- suppressWarnings(
-    create_cell_geometry(var.get.nc(nc, nc_coord_vars$X, unpack = TRUE),
-                         var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE),
+    create_cell_geometry(rnz::get_var(nc, nc_coord_vars$X, unpack = TRUE),
+                         rnz::get_var(nc, nc_coord_vars$Y, unpack = TRUE),
                          "+init=epsg:4326", geom))
 
   expect_true(nrow(cell_geometry) == 340)
 
   cell_geometry <- suppressWarnings(
-    create_cell_geometry(var.get.nc(nc, nc_coord_vars$X, unpack = TRUE),
-                         var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE),
+    create_cell_geometry(rnz::get_var(nc, nc_coord_vars$X, unpack = TRUE),
+                         rnz::get_var(nc, nc_coord_vars$Y, unpack = TRUE),
                          "+init=epsg:4326", geom, 10000))
-  close.nc(nc)
+  rnz::close_nz(nc)
 
   expect_true(nrow(cell_geometry) == 700)
 
@@ -58,13 +58,13 @@ test_that("curvilinear", {
                0.7737, tolerance = 0.001)
 
   nc_file <- system.file("extdata/test_stageiv_xyt_borked.nc", package = "intersectr")
-  nc <- open.nc(nc_file)
+  nc <- rnz::open_nz(nc_file)
 
   cell_geometry <- suppressWarnings(
-    create_cell_geometry(var.get.nc(nc, nc_coord_vars$X, unpack = TRUE),
-                         var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE),
+    create_cell_geometry(rnz::get_var(nc, nc_coord_vars$X, unpack = TRUE),
+                         rnz::get_var(nc, nc_coord_vars$Y, unpack = TRUE),
                          "+init=epsg:4326", geom, 10000))
-  close.nc(nc)
+  rnz::close_nz(nc)
 
   data_source_cells <- st_sf(select(cell_geometry, grid_ids))
 
@@ -83,12 +83,12 @@ test_that("curvilinear", {
 test_that("curvilinear", {
   nc_file <- system.file("extdata/c201923412.out1_4.nc", package = "intersectr")
   variable_name <- "wvh"
-  nc <- open.nc(nc_file)
+  nc <- rnz::open_nz(nc_file)
 
   nc_coord_vars <- nc_coord_var(nc_file, variable_name)
 
-  x <- var.get.nc(nc, nc_coord_vars$X, unpack = TRUE)
-  y <- var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE)
+  x <- rnz::get_var(nc, nc_coord_vars$X, unpack = TRUE)
+  y <- rnz::get_var(nc, nc_coord_vars$Y, unpack = TRUE)
 
   cell_geometry <- suppressWarnings(
     create_cell_geometry(x, y, "+init=epsg:4326"))
@@ -122,7 +122,7 @@ test_that("curvilinear", {
   x_ind <- unique(x_inds[which(x_inds[, 1] %in% y_inds[, 1]), 1])
   y_ind <- unique(y_inds[which(x_inds[, 2] %in% y_inds[, 2]), 2])
 
-  val <- var.get.nc(nc, variable_name, c(x_ind, y_ind, 1), c(1,1,1))
+  val <- rnz::get_var(nc, variable_name, c(x_ind, y_ind, 1), c(1,1,1))
 
   expect_equal(check_row$data, as.numeric(val))
 

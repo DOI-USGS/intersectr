@@ -12,10 +12,10 @@ test_that("1d lat/lon", {
   y_var <- nc_coord_vars$Y
   t_var <- nc_coord_vars$T
 
-  nc <- RNetCDF::open.nc(nc_file)
+  nc <- rnz::open_nz(nc_file)
 
-  x <- RNetCDF::var.get.nc(nc, x_var, unpack = TRUE)
-  y <- RNetCDF::var.get.nc(nc, y_var, unpack = TRUE)
+  x <- rnz::get_var(nc, x_var, unpack = TRUE)
+  y <- rnz::get_var(nc, y_var, unpack = TRUE)
 
   geom <- sf::read_sf(system.file("shape/nc.shp", package = "sf")) %>%
     st_transform(5070)

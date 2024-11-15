@@ -10,13 +10,13 @@ test_precise <- function(nc_file, variable_name) {
 
   suppressWarnings(nc_prj <- ncmeta::nc_gm_to_prj(ncmeta::nc_grid_mapping_atts(nc_file)))
 
-  nc <- RNetCDF::open.nc(nc_file)
-  X_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$X, unpack = TRUE)
+  nc <- rnz::open_nz(nc_file)
+  X_coords <- rnz::get_var(nc, nc_coord_vars$X, unpack = TRUE)
   X_coords <- seq(from = X_coords[1],
                   to = X_coords[length(X_coords)],
                   along.with = X_coords)
 
-  Y_coords <- RNetCDF::var.get.nc(nc, nc_coord_vars$Y, unpack = TRUE)
+  Y_coords <- rnz::get_var(nc, nc_coord_vars$Y, unpack = TRUE)
   Y_coords <- seq(from = Y_coords[1],
                   to = Y_coords[length(Y_coords)],
                   along.with = Y_coords)
@@ -54,25 +54,25 @@ test_precise <- function(nc_file, variable_name) {
                                       start_datetime = "1999-01-01 00:00:00",
                                       end_datetime = "1999-12-31 23:59:59")
 
-  dates <- RNetCDF::var.get.nc(nc, "time", unpack = TRUE)
-  date_units <- RNetCDF::att.get.nc(nc, "time", "units")
+  dates <- rnz::get_var(nc, "time", unpack = TRUE)
+  date_units <- rnz::get_att(nc, "time", "units")
   dates <- RNetCDF::utcal.nc(date_units, dates, type = "c")
-  date_ind <- which(as.character(dates) == "1999-01-01")
+  date_ind <- which(as.character(dates) == "1999-01-31")
 
-  nc_var_info <- RNetCDF::var.inq.nc(nc, variable_name)
+  nc_var_info <- rnz::inq_var(nc, variable_name)
 
-  X_var_info <- RNetCDF::var.inq.nc(nc, nc_coord_vars$X)
-  Y_var_info <- RNetCDF::var.inq.nc(nc, nc_coord_vars$Y)
-  T_var_info <- RNetCDF::var.inq.nc(nc, nc_coord_vars$T)
+  X_var_info <- rnz::inq_var(nc, nc_coord_vars$X)
+  Y_var_info <- rnz::inq_var(nc, nc_coord_vars$Y)
+  T_var_info <- rnz::inq_var(nc, nc_coord_vars$T)
 
   dimid_order <- match(nc_var_info$dimids,
                        c(X_var_info$dimids,
                          Y_var_info$dimids,
                          T_var_info$dimids))
 
-  vals <- RNetCDF::var.get.nc(nc, variable_name,
-                              start = c(geom_2$X_ind, geom_2$Y_ind, date_ind)[dimid_order],
-                              count = c(1, 1, 12)[dimid_order], unpack = TRUE)
+  vals <- rnz::get_var(nc, variable_name,
+                       start = c(geom_2$X_ind, geom_2$Y_ind, date_ind)[dimid_order],
+                       count = c(1, 1, 12)[dimid_order], unpack = TRUE)
 
   test_that("values come back 1:1 for precise grid cell with time filter", {
     expect_equal(as.numeric(vals), as.numeric(intersected[[as.character(geom_2$grid_ids2)]]))

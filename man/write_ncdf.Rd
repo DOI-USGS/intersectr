@@ -4,8 +4,15 @@
 \alias{write_ncdf}
 \title{Write output to NetCDF}
 \usage{
-write_ncdf(nc_file, int_data, variable_name, variable_units,
-  variable_long_name = NULL, lats = NULL, lons = NULL)
+write_ncdf(
+  nc_file,
+  int_data,
+  variable_name,
+  variable_units,
+  variable_long_name = NULL,
+  lats = NULL,
+  lons = NULL
+)
 }
 \arguments{
 \item{nc_file}{character path or url to a NetCDF source}
